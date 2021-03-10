@@ -1,0 +1,165 @@
+---
+title: "Visualizing Time Series"
+output: html_document
+---
+
+
+```{r}
+library(lubridate)
+library(ggplot2)  
+library(scales)   
+library(gridExtra)
+library(readr)
+library(tidyverse)
+```
+
+
+```{r}
+harMetDaily.09.11 <- read_csv("Met_HARV_Daily_2009_2011.csv")
+# The data is available on the following website : https://data.neonscience.org/
+```
+
+```{r}
+str(harMetDaily.09.11$date)
+```
+
+```{r}
+harMetDaily.09.11 %>% 
+  select(date, airt) %>% 
+  head(10)
+```
+```{r}
+df <- harMetDaily.09.11 %>% 
+  select(date, airt)  
+```
+
+
+```{r}
+ggplot(df, aes(date, airt)) +
+  geom_point(color = "purple",
+             size = 3,
+             pch = 18) +
+  labs(x= "Date", 
+       y= expression(paste("Temperature ( ", degree ~ C, " )")), 
+       title = "Air Temperature (2009-2011)\nNEON Harvard Forest Field Site") +
+  scale_x_date(labels = date_format("%b %y")) +
+  stat_smooth(colour = "green") +
+  theme(plot.title = element_text(color="darkblue", size=14, face="bold.italic"),
+        text = element_text(size=14,face="bold"),
+        axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"))
+
+# https://www.neonscience.org/resources/learning-hub/tutorials/dc-time-series-plot-ggplot-r
+```
+
+# APPLICATION
+
+## 1. Number of crimes in Toronto 
+
+```{r}
+Torontocrimes <- read_csv("Torontocrimes.csv")
+```
+
+```{r}
+nf <-  count(Torontocrimes, occurrencedate)
+```
+
+```{r}
+ggplot(nf, aes(occurrencedate, n)) + geom_line()
+```
+If we are interested in day 
+
+```{r}
+str(Torontocrimes$occurrencedate)
+```
+
+```{r}
+Torontocrimes %>% 
+  filter(occurrenceyear == 2018) %>% 
+  select(occurrencedate) %>% 
+  mutate(date = as.Date(occurrencedate)) %>% 
+  group_by(date) %>% 
+  summarise(frequency =  n()) %>% 
+  head(10)
+```
+Checking
+
+```{r}
+Torontocrimes %>% 
+  filter(occurrenceyear == 2018 & occurrencemonth == "January" & occurrenceday == 1) %>% 
+  count()
+```
+
+```{r}
+nf <- Torontocrimes %>% 
+  filter(occurrenceyear == 2018) %>% 
+  select(occurrencedate) %>% 
+  mutate(date = as.Date(occurrencedate)) %>% 
+  group_by(date) %>% 
+  summarise(frequency =  n()) 
+```
+
+
+```{r}
+ggplot(nf, aes(date, frequency)) + 
+  geom_line() +
+    theme(plot.title = element_text(color="darkblue", size=14, face="bold.italic"),
+        text = element_text(size=14,face="bold"),
+        axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"))
+```
+
+
+# Time-Series Calendar Heatmaps
+
+## Using ggTimeSeries package
+
+```{r}
+library(ggTimeSeries)
+```
+
+
+```{r,fig.height= 10,fig.width= 10}
+Torontocrimes %>% 
+  select(occurrencedate) %>% 
+  mutate(date = as.Date(occurrencedate)) %>% 
+  group_by(date) %>% 
+  summarise(frequency =  n()) %>% 
+  ggplot_calendar_heatmap("date", "frequency") +
+  xlab(NULL) +
+  ylab(NULL) +
+  facet_wrap(~Year, ncol = 1) +
+  scale_fill_gradient(high="red", low="yellow")+
+    theme(plot.title = element_text(color="darkblue", size=14, face="bold.italic"),
+        text = element_text(size=14,face="bold"),
+        axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"))
+```
+
+```{r}
+library(gapminder)
+```
+
+```{r, fig.height= 5, fig.width=7.5}
+gapminder %>% 
+  filter(country == "Canada") %>% 
+  select(year, lifeExp) %>% 
+  ggplot(aes(x=year, y=lifeExp)) +
+  geom_line()+
+  geom_point(size = 4, color = "blue")+
+  labs(x = NULL, y = NULL) + 
+  theme(text = element_text(size = 16), 
+        panel.border = element_rect(fill = NA, colour = "grey20")) +
+  labs(title =  "Life expectancy in Canada",
+       x = NULL,
+       y = "Life expectancy (Years)") +
+  theme_minimal() +
+    theme(plot.title = element_text(color="darkblue", size=14, face="bold.italic"),
+        text = element_text(size=14,face="bold"),
+        axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"))
+```
+
+
+
+

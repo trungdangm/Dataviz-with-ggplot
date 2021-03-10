@@ -1,0 +1,277 @@
+---
+title: "Correlograms"
+output: html_document
+---
+
+
+A correlogram or correlation matrix allows to analyse the relationship between each pair of numeric variables in a dataset. 
+
+It gives a quick overview of the whole dataset. It is more used for exploratory purpose than explanatory.
+
+
+
+# 1. USING THE GGALLY PACKAGE
+
+
+```{r}
+library(GGally)
+```
+
+The ggpairs() function of the GGally package allows to build a great scatterplot matrix.
+
+Scatterplots of each pair of numeric variable are drawn on the left part of the figure. 
+
+Pearson correlation is displayed on the right.
+
+Variable distribution is available on the diagonal.
+
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+bank <- read.csv("bank_cleaned.csv")
+```
+
+```{r}
+num_bank <- bank %>% 
+  select(where(is.numeric)) %>% 
+  select(-c(X, response_binary))
+```
+
+```{r}
+str(num_bank)
+```
+
+
+
+
+
+https://www.rdocumentation.org/packages/GGally/versions/1.5.0/topics/ggpairs
+
+ggpairs(
+  data,
+  mapping = NULL,
+  columns = 1:ncol(data),
+  title = NULL,
+  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "facetbar", na = "na"),
+  lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na ="na"),
+  diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
+  params = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  axisLabels = c("show", "internal", "none"),
+  columnLabels = colnames(data[columns]),
+  labeller = "label_value",
+  switch = NULL,
+  showStrips = NULL,
+  legend = NULL,
+  cardinality_threshold = 15,
+  progress = NULL,
+  legends = stop("deprecated"))
+
+
+
+
+
+
+
+```{r}
+ggpairs(num_bank, title="correlogram with ggpairs()") 
+```
+
+
+```{r, fig.width= 10, fig.height= 7.5}
+ggpairs(iris, 
+        mapping = aes(color = Species),
+        columns = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width', 'Species'), 
+        columnLabels = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width', 'Species')) + 
+  scale_colour_manual(values=c('red','blue','orange')) +
+  theme_minimal()
+```
+```{r}
+
+library(MASS)
+```
+```{r}
+data(banknote)
+```
+
+
+```{r}
+library(uskewFactors)
+```
+
+```{r}
+data(banknote)
+```
+
+```{r}
+swissbank <- banknote %>% 
+  mutate(status =  case_when(
+    Y == 1~ "counterfeit", 
+    Y == 0 ~ "genuine"))
+
+swissbank<- subset(swissbank, select = -c(Y))
+```
+
+This package contains measurements on 200 Swiss banknotes: 100 genuine and 100 counterfeit. The variables are length of bill, width of left edge, width of right edge , bottom margin width and top margin width. All measurements are in millimetres. The data source is noted below. This data is also available in the alr package in R.
+
+
+```{r}
+str(swissbank)
+```
+
+
+
+```{r, fig.height= 7.5, fig.width= 15}
+ggpairs(swissbank, mapping = aes(col = status)) + scale_colour_manual(values=c('blue','orange')) +
+  theme_bw()
+```
+
+
+## Scatterplot matrix with ggpairs()
+
+
+The ggcorr() function allows to visualize the correlation of each pair of variable as a square. Note that the method argument allows to pick the correlation type you desire.
+
+```{r}
+# Nice visualization of correlations
+ggcorr(num_bank, method = c("everything", "pearson")) 
+```
+
+### Split by group
+
+```{r}
+# From the help page:
+data(flea)
+ggpairs(flea, columns = 2:4, ggplot2::aes(colour=species)) 
+```
+
+### Change plot types
+Change the type of plot used on each part of the correlogram. This is done with the upper and lower argument.
+
+```{r}
+library(reshape)
+```
+
+```{r}
+
+data(tips)
+ggpairs(tips[, c(1, 3, 4, 2)],
+  upper = list(continuous = "density", combo = "box_no_facet"),
+  lower = list(continuous = "points", combo = "dot_no_facet")
+)
+```
+
+
+
+```{r, fig.height= 10, fig.width= 15}
+ggpairs(tips,
+        upper = list(continuous = "density", combo = "box_no_facet"),
+        lower = list(continuous = "points", combo = "dot_no_facet"))
+```
+
+
+
+
+# 2. USING THE CORRGRAM PACKAGE
+
+```{r}
+library(corrgram)
+```
+
+```{r, fig.height= 7.5, fig.width= 10}
+corrgram(mtcars, order = TRUE, 
+         lower.panel = panel.shade, 
+         upper.panel = panel.pie, 
+         text.panel = panel.txt, 
+         main = "Car Milage Data in PC2/PC1 Order") 
+```
+```{r, fig.height= 7.5, fig.width= 10}
+corrgram(mtcars, 
+         order = TRUE, 
+         lower.panel = panel.ellipse, 
+         upper.panel = panel.pts, 
+         text.panel = panel.txt, 
+         diag.panel = panel.minmax, 
+         main="Car Milage Data in PC2/PC1 Order") 
+```
+
+```{r, fig.height= 7.5, fig.width= 10}
+corrgram(mtcars, order = NULL, 
+         lower.panel = panel.shade, 
+         upper.panel = NULL, 
+         text.panel = panel.txt, 
+         main="Car Milage Data (unsorted)")
+```
+
+# 3. OTHER METHODS
+
+Lesser known ways to build correlogram with R, like the ellipse package, the plot() function and the car package.
+
+## Package ellipse
+
+```{r}
+library(ellipse)
+```
+```{r}
+library(RColorBrewer)
+```
+
+Use of the mtcars data proposed by R
+
+```{r}
+data <- cor(mtcars)
+```
+
+```{r}
+# Build a Pannel of 100 colors with RcolorBrewer
+my_colors <- brewer.pal(5, "Spectral")
+my_colors <- colorRampPalette(my_colors)(100)
+ 
+# Order the correlation matrix
+ord <- order(data[1, ])
+
+data_ord <- data[ord, ord]
+
+plotcorr(data_ord , col=my_colors[data_ord*50+50] , mar=c(1,1,1,1)  )
+```
+
+The native plot() function does the job pretty well as long as you just need to display scatterplots.
+
+
+## The native plot() function
+
+
+```{r, fig.height= 7.5, fig.width= 10}
+# Plot
+plot(mtcars , pch=20 , cex=1.5 , col="blue")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

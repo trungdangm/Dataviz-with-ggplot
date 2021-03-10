@@ -1,0 +1,265 @@
+---
+title: 'Visualizing Amounts: bar charts'
+author: "Minh Trung DANG"
+date: "18/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(gapminder)
+```
+## Including Plots
+
+You can also embed plots, for example:
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+Bar charts seem to be used much more than dot plots in the popular media, but they are less widely applicable.
+
+Bar graphs, also known as column charts, use vertical or horizontal bars to represent data along both an x-axis and a y-axis visually. Each bar represents one value.
+
+ These charts are useful for displaying data that is classified into nominal or odinal categories. A good example of a bar chart can be seen below.
+
+This in turn implies that bar charts should always have a zero base line.
+
+A bar chart uses bars to show comparisons between categories of data. These bars can be displayed horizontally or vertically. A bar graph will always have two axis. One axis will generally have numerical values, and the other will describe the types of categories being compared.
+From a bar chart, we can see which groups are highest or most common, and how other groups compare against the others.
+
+The primary variable of a bar chart is its categorical variable. A categorical variable takes discrete values, which can be thought of as labels.
+In contrast, the secondary variable will be numeric in nature. The secondary variable’s values determine the length of each bar.
+
+
+Basics
+
+In the simplest case, the data contains one categorical variable and one numerical variable
+
+
+```{r}
+df <- data.frame(Category = c("C1", "C2", "C3", "C4","C5","C6"), 
+                 Amount = c(4.2, 10, 29.5, 13, 4.6, 10))
+df
+```
+
+
+
+
+```{r}
+ggplot(data = df, aes(x = reorder(Category, Amount),
+                      y = Amount)) + 
+  geom_bar(stat = "identity",
+           width = 0.75,
+           aes(fill = Amount)) +
+  geom_text(aes(label=Amount), vjust = -0.3, size = 3.5) +
+  labs(x =  NULL)
+```
+
+Horizontal Bar Graph
+
+```{r}
+ggplot(data = df, aes(x = reorder(Category, Amount),
+                      y = Amount)) + 
+  geom_bar(stat = "identity",
+           width = 0.75,
+           aes(fill = Amount)) +
+  geom_text(aes(label=Amount), hjust = 0, size = 3.5) +
+  coord_flip()+
+  labs(x =  NULL)
+```
+
+
+
+Application of bar charts and dot charts
+
+
+
+The example above uses a very simple data. In real world example, we need to create an aggregated table before feeding the in ggplot. The following example will show the utility of bar chart. Also, data are also tranformed. 
+
+
+
+Example 1: Kickstarter project (simple data). 
+```{r}
+KS <- read_csv("Kickstarter1.csv", col_names = TRUE, quote = "\"")
+head(KS, 10)
+```
+
+
+
+What are the most popular categories?
+
+```{r, fig.height= 7.5, fig.width= 10}
+KS %>%
+  group_by(CategoryName) %>% 
+  dplyr::summarise(counts = n()) %>% 
+  arrange(desc(counts)) %>% 
+  ggplot(aes(x= reorder(CategoryName, -counts),
+               y  = counts,
+               fill = counts)) +
+  geom_bar(stat = "identity",
+           width = 0.7) +
+  scale_fill_gradient(low="skyblue1", high="royalblue4")+
+  geom_text(aes(label = paste0(counts)), 
+            vjust = 0.25, 
+            hjust = -0.15,
+            color = "darkblue", 
+            size = 5) +
+  scale_y_continuous(limits = c(0,2500)) +
+  labs(x = "Category",
+       y = "Frequency") +
+  coord_flip() +
+  theme(axis.text = element_text(size = 14, color = "black"),
+  axis.title = element_text(size = 14, color = "black",face="bold"),
+  plot.title = element_text(color = "black", size = 14, face = "bold"),
+  plot.caption = element_text(color = "black",size = 14, face = "italic"),
+  legend.position = "none")
+```
+
+
+Example 2: The data need to be tranformed.
+
+What do people die from?
+
+We will use the data of cause of death. 
+
+```{r}
+deathcause <- read.csv("Number of deaths by cause.csv", header = TRUE, sep = ",")
+str(deathcause)
+```
+
+
+The data show the number of death in funtion of the cause (such as Malaria, Fire, Cancers,...). The entity is the country. 
+All the number of death were also recorded every year from 1990 to 2017.
+
+
+In a simple case, we can focus on one cause (heart diease for example). We would look for what country has the number of death in 2917
+```{r}
+df2 <- droplevels(deathcause[!deathcause$Code == "",])
+str(df2)
+```
+
+```{r}
+df3 <- df2 %>%
+  filter(Year == 2017 & Entity != "World") %>% 
+  select(Entity, Cancers) %>%
+  arrange(desc(Cancers)) %>% 
+  top_n(10)
+
+df3
+```
+
+```{r}
+ggplot(data = df3, aes(x = reorder(Entity,Cancers),
+                      y = Cancers/100000)) + 
+  geom_bar(stat = "identity",
+           width = 0.75) +
+  coord_flip()+
+  labs(x = NULL,
+      y = "Number of deaths (Millions)",
+      title = "The top 10 countries with the number of death in 2016",
+      caption = "Data source: https://ourworldindata.org/") +
+  theme(axis.text = element_text(size = 14, color = "black"),
+  axis.title = element_text(size = 14, color = "black",face="bold"),
+  plot.title = element_text(color = "black", size = 14, face = "bold"),
+  plot.caption = element_text(color = "black",size = 14, face = "italic"),
+  legend.position = "none")
+```
+
+
+Now, if we would like to know what is the the most imporatant cause for death for world
+
+
+we have to reshape the data
+
+
+, select only World data
+```{r}
+df3_W <- df2 %>%
+  filter(Entity == "World") %>% 
+  select(-c("Entity", "Code", "Execution"))
+
+dat <- reshape2::melt(df3_W, 
+                      id.vars = "Year", 
+                      measure.vars = c("Meningitis","Lower.respiratory.infections","Intestinal.infectious.diseases", "Protein.energy.malnutrition","Terrorism","Cardiovascular.diseases","Dementia","Kidney.disease",   
+"Respiratory.diseases","Liver.diseases","Digestive.diseases",            
+"Hepatitis","Cancers", "Parkinson.disease",             
+"Fire", "Malaria", "Drowning","Homicide", "HIV.AIDS","Drug.use.disorders",            
+"Tuberculosis", "Road.injuries" ,"Maternal.disorders",            
+"Neonatal.disorders", "Alcohol.use.disorders","Natural.disasters",             
+"Diarrheal.diseases","Heat..hot.and.cold.exposure." ,"Nutritional.deficiencies" ,     
+"Suicide",  "Conflict" , "Diabetes" ,"Poisonings"))
+```
+
+
+```{r, fig.height= 10, fig.width= 15}
+data2016 <- dat %>% 
+  filter(Year == 2016)
+
+data2016$variable <- factor(data2016$variable ,                                  
+                  levels = data2016$variable [order(data2016$value)])
+
+ggplot(data2016, 
+       aes(x = variable, 
+           y  = value/1000000)) + 
+  geom_bar(stat = "identity") +
+  coord_flip()+
+  scale_y_continuous(breaks=seq(0,18,3)) +
+  labs(x = NULL,
+      y = "Number of deaths (Millions)",
+      title = "The top 10 causes of death in 2016",
+      caption = "Data source: https://ourworldindata.org/") +
+  theme(axis.text = element_text(size = 14, color = "black"),
+  axis.title = element_text(size = 14, color = "black",face="bold"),
+  plot.title = element_text(color = "black", size = 14, face = "bold"),
+  plot.caption = element_text(color = "black",size = 14, face = "italic"),
+  legend.position = "none")
+```
+
+The top 10 causes of death
+
+
+```{r, fig.height= 7.5, fig.width= 10}
+data2016_top10 <- data2016 %>% 
+  arrange(desc(value)) %>% 
+  top_n(10)
+
+ggplot(data2016_top10, 
+       aes(x = variable, 
+           y  = value/1000000)) + 
+  geom_bar(stat = "identity") +
+  coord_flip()+
+  scale_y_continuous(breaks=seq(0,18,3)) +
+  labs(x = NULL,
+      y = "Number of deaths (Millions)",
+      title = "The top 10 causes of death in 2016",
+      caption = "Data source: https://ourworldindata.org/") +
+  theme(axis.text = element_text(size = 14, color = "black"),
+  axis.title = element_text(size = 14, color = "black",face="bold"),
+  plot.title = element_text(color = "black", size = 14, face = "bold"),
+  plot.caption = element_text(color = "black",size = 14, face = "italic"),
+  legend.position = "none")
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,435 @@
+---
+title: "Grammar of graphic-ggplot2"
+author: "Minh Trung DANG"
+date: "23/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+qplot(displ, hwy, data=mpg, facets = . ~ year) + geom_smooth()
+```
+
+
+Scaling actually occurs in three parts: transforming, training and mapping.
+
+ Scale transformation occurs before statistical transformation so that statis-
+tics are computed on the scale-transformed data. This ensures that a plot
+of log(x) vs. log(y) on linear scales looks the same as x vs. y on log scales.
+There are many different transformations that can be used, including taking
+square roots, logarithms and reciprocals.
+
+ Scale transformation occurs before statistical transformation so that statis-
+tics are computed on the scale-transformed data. This ensures that a plot
+of log(x) vs. log(y) on linear scales looks the same as x vs. y on log scales.
+There are many dierent transformations that can be used, including taking
+square roots, logarithms and reciprocals.
+
+Finally the scales map the data values into aesthetic values. This is a
+local operation: the variables in each dataset are mapped to their aesthetic
+values producing a new dataset that can then be rendered by the geoms.
+
+the components that make up a plot (a layer): 
+  data 
+  aesthetic mappings, 
+  geometric objects (geoms), 
+  statistical transformations (stats), 
+  scales
+  faceting
+
+
+A plot may have multiple layers, as in the example where we overlaid a smoothed line on a scatterplot.
+
+All together, the layered grammar defines a plot as the combination of:
+
+** A default dataset and set of mappings from variables to aesthetics.
+** One or more layers, each composed of a geometric object, a statistical transformation, and a position adjustment, and optionally, a dataset and
+aesthetic mappings.
+** One scale for each aesthetic mapping.
+** A coordinate system.
+** The faceting specification.
+
+```{r}
+p <- qplot(displ, hwy, data = mpg, colour = factor(cyl))
+p
+```
+
+
+```{r}
+summary(p)
+```
+
+# Save plot object to disk
+save(p, file = "plot.rdata")
+# Load from disk
+load("plot.rdata")
+
+# Save png to disk
+```{r}
+ggsave("plot.png", width = 5, height = 5)
+```
+
+Build a plot layer by layer
+
+Each layer can come from a dierent dataset and have a dierent aesthetic mapping, allowing us to create plots that could not be generated
+using qplot(), which permits only a single dataset and a single set of aesthetic mappings.
+
+
+1. The data  which must be an R data frame, and can be changed after the plot is created.
+2. A set of aesthetic mappings, which describe how variables in the data are mapped to aesthetic properties of the layer. 
+3. This section includes a description of how layer settings override the plot defaults, the difference between setting and mapping, and the important group aesthetic.
+4. The geom, which describes the geometric used to draw the layer. The geom defines the set of available aesthetic properties.
+5. The stat, which takes the raw data and transforms it in some useful way. 
+The stat returns a data frame with new variables that can also be mapped to aesthetics with a special syntax.
+6. The position adjustment, which adjusts elements to avoid overplotting.
+
+
+Creating a plot
+```{r}
+p <- ggplot(diamonds, aes(carat, price, color =  cut))
+p
+```
+
+This plot object cannot be displayed until we add a layer: there is nothing to see!
+
+
+4.3 Layers
+
+```{r}
+p2 <- ggplot(diamonds, aes(x = carat))
+p2 <- p2 + geom_histogram(binwidth = 2, fill = "steelblue")
+p2
+```
+
+
+All the shortcut functions have the same basic form, beginning with geom_ or stat_:
+  geom_XXX(mapping, data, ..., geom, position)
+  stat_XXX(mapping, data, ..., stat, position)
+  
+  
+***mapping (optional): A set of aesthetic mappings, specified using the aes() function and combined with the plot defaults
+***data (optional): A dataset which overrides the default plot dataset. 
+It is most commonly omitted, in which case the layer will use the default plot data.
+***...: Parameters for the geom or stat, such as bin width in the histogram or bandwidth for a loess smoother. 
+You can also use aesthetic properties as parameters. When you do this you set the property to a fixed value, not
+map it to a variable in the dataset. The example above showed setting
+the fill colour of the histogram to steelblue".
+
+***geom or stat (optional): You can override the default stat for a geom, or the default geom for a stat. 
+This is a text string containing the name of the geom to use. Using the default will give you a standard plot; 
+overriding the default allows you to achieve something more exotic,
+
+***position (optional): Choose a method for adjusting overlapping objects,
+
+
+NOTE : the order of data and mapping arguments is switched between ggplot() and the layer functions.
+
+In ggplot : ggplot(data = diamonds, aes(x = carat))
+In lyaer function: geom_XXX(mapping, data, ..., geom, position)
+
+Because you almost always specify data for the plot, and almost always specify aesthetics|but not data|for the
+layers.
+
+```{r}
+p5A <- ggplot(msleep, aes(sleep_rem /sleep_total, awake)) +
+geom_point()
+
+
+p5B <- qplot(sleep_rem / sleep_total, awake, data = msleep)
+
+ggarrange(p5A, p5B, ncol = 2, nrow = 1)
+
+```
+
+
+```{r}
+p6A <- qplot(sleep_rem / sleep_total, awake, data = msleep, geom = c("point", "smooth"))
+
+# This is equivalent to
+p6B <- ggplot(msleep, aes(sleep_rem / sleep_total, awake)) + geom_point() + geom_smooth()
+
+ggarrange(p6A, p6B, ncol = 2, nrow = 1)
+```
+
+```{r}
+p7 <- ggplot(msleep, aes(sleep_rem / sleep_total, awake))
+summary(p7)
+```
+
+
+```{r}
+p8 <- ggplot(msleep, aes(sleep_rem / sleep_total, awake)) + geom_point()
+summary(p8)
+```
+
+Layers are regular R objects :a set of plots can be initialised using different data then enhanced with the same layer.
+
+```{r, fig.height= 5, fig.width= 15}
+bestfit <- geom_smooth(method = "lm", se = F, colour = alpha("steelblue", 0.5), size = 2)
+
+p9A <- qplot(sleep_rem, sleep_total, data = msleep) + bestfit
+p9B <- qplot(awake, brainwt, data = msleep, log = "y") + bestfit
+p9C <- qplot(bodywt, brainwt, data = msleep, log = "xy") + bestfit
+
+ggarrange(p9A, p9B, p9C, ncol = 3, nrow = 1)
+```
+
+
+Data : it must be a data frame.
+
+```{r}
+p <- ggplot(mtcars, aes(mpg, wt, colour = cyl)) + geom_point()
+p
+```
+
+
+```{r}
+mtcars2 <- transform(mtcars, mpg = mpg ^ 2)
+mtcars2
+```
+
+```{r}
+p %+% mtcars2
+```
+
+It is not necessary to specify a default dataset except when using faceting;
+faceting is a global operation (i.e., it works on all layers) and it needs to have
+a base dataset which defines the set of facets for all datasets.
+
+
+
+
+own data.
+The data is stored in the plot object as a copy, not a reference. This has two
+important consequences: if your data changes, the plot will not; and ggplot2
+objects are entirely self-contained so that they can be save()d to disk and
+later load()ed and plotted without needing anything else from that session.
+
+
+Aesthetic mappings
+
+To describe the way that variables in the data are mapped to things that we
+can perceive on the plot (the "aesthetics")
+The aes function takes a list of aesthetic-variable pairs like these:
+aes(x = weight, y = height, colour = age) : mapping x-position to weight, y-position to height and colour to age
+to age.
+NOTE :never refer to variables outside of the dataset (e.g., with diamonds$carat), as this makes it impossible to encapsulate all of the
+data needed for plotting in a single object.
+
+functions of variables can be used. Example : aes(weight, height, colour = sqrt(age))
+
+Any variable in an aes() specification must be contained inside the plot or layer data.
+
+
+
+```{r}
+p451 <- ggplot(mtcars)
+```
+
+```{r}
+summary(p451)
+```
+
+
+```{r}
+p451 <- p451 + aes(wt, hp)
+summary(p451)
+```
+
+
+```{r, fig.height= 5, fig.width= 15}
+p451A <- ggplot(mtcars, aes(x = mpg, y = wt))
+
+p451B <- p451A + geom_point() + ggtitle("default mappings in the plot p")
+
+p451C <- p451A + geom_point(aes(colour = factor(cyl))) + ggtitle("Overriding colour with factor(cyl)")
+
+p451D <- p451A + geom_point(aes(y = disp)) + ggtitle("overriding y-position with disp")
+
+ggarrange(p451B, p451C, p451D, ncol = 3, nrow = 1)
+```
+
+Aesthetic mappings specified in a layer affect only that layer.
+
+
+```{r, fig.width= 16, fig.height= 5}
+p451E <- ggplot(data = mtcars, aes(x = mpg, y = wt)) + geom_point() + ggtitle("p451E")
+
+p451F <- ggplot() + geom_point(data = mtcars, aes(x = mpg, y = wt)) + ggtitle("p451F")
+
+p451G <- ggplot(data = mtcars) + geom_point(aes(x = mpg, y = wt)) + ggtitle("p451G")
+
+p451H <- ggplot(data = mtcars, aes(x = mpg, y = wt)) + geom_point(aes(y = disp)) + ggtitle("p451H")
+
+ggarrange(p451E, p451F,p451G ,p451H, ncol = 4, nrow = 1)
+```
+
+# in P451E, we define y = disp in aes
+# in P451D, using aes of layer geom_point, the y axe is disp instead of wt (in P451A)
+but the aes in the ggplot function must be defined ?
+
+default mapping : aes (mpg, wt)
+ADD : ase(colour = cyl)  result : aes(mpg, wt, colour = cyl)
+Override: aes(y = disp) result : aes(mpg, disp)
+Remove: aes(y= NULL) result : aes(mpg)
+
+4.5.2 Setting vs. mapping
+
+Aesthetics can vary for each observation being plotted, while parameters do not.
+We map an aesthetic to a variable (e.g., (aes(colour = cut))) or set it to a constant (e.g.,colour = "red").
+
+```{r, fig.width= 10}
+p452 <- ggplot(mtcars, aes(mpg, wt))
+
+p452A <- p452 + geom_point(colour = "darkblue", size = 5) + ggtitle("sets the colour of the points, \n using the colour parameter of the layer")
+
+
+p452B <- p452 + geom_point(aes(colour = "darkblue"), size = 5) + ggtitle("This maps (not sets) the colour to the value \"darkblue\"")
+
+ggarrange(p452A, p452B, ncol = 2, nrow = 1)
+```
+
+p452B : This maps (not sets) the colour to the value \darkblue". This eectively
+creates a new variable containing only the value \darkblue" and then maps
+colour to that new variable. Because this value is discrete, the default colour
+scale uses evenly spaced colours on the colour wheel, and since there is only
+one value this colour is pinkish.
+
+4.5.3 Grouping
+By default, the group is set to the interaction of all discrete variables in the plot.
+
+
+```{r}
+install.packages("nlme")
+```
+
+```{r}
+library(nlme)
+```
+
+```{r}
+str(Oxboys)
+```
+
+```{r}
+head(Oxboys)
+```
+
+Multiple groups, one aesthetic.
+```{r}
+p453 <- ggplot(Oxboys, aes(age, height, group = Subject)) + geom_line()
+```
+
+```{r, fig.width= 15, fig.height= 5}
+p453A <- ggplot(Oxboys, aes(age, height, group = Subject)) + geom_line() + ggtitle("Correctly specifying group = Subject produces one line per subject.")
+
+p453B <- ggplot() + geom_line(data = Oxboys, aes(age, height, group = Subject)) + ggtitle("Correctly specifying group = Subject produces one line per subject.")
+
+ggarrange(p453A, p453B, ncol = 2, nrow = 1)
+```
+
+
+```{r}
+ggplot() + geom_point(data = Oxboys, aes(age, height))
+ggplot() + geom_line(data = Oxboys, aes(age, height)) # Line plots with an incorrect grouping specification typically have this characteristic appearance.
+```
+
+Different groups on different layers.
+
+```{r, fig.width= 15, fig.height= 5}
+p453C <- p453 + geom_smooth(aes(group = Subject), 
+                            method="lm", 
+                            se = F) + ggtitle("Using the same grouping as the lines results in a line of best fit for each boy")
+p453D <- p453 + geom_smooth(aes(group = 1), 
+                            method="lm", 
+                            size = 2, 
+                            se = F) + ggtitle("Using aes(group = 1) in thesmooth layer fits a single line of best fit across all boys")
+
+ggarrange(p453C, p453D, ncol = 2, nrow = 1)
+```
+
+This is not what we wanted; we have inadvertently added a smoothed line for each boy.
+
+The new layer needs a diffierent group aesthetic, group = 1, so that the new line will be based on all the data, as shown in the second plot in
+the figure.
+
+***Overriding the default grouping***
+
+```{r}
+boysbox <- ggplot(Oxboys, aes(Occasion, height)) + geom_boxplot()
+boysbox
+```
+
+```{r}
+boysbox2 <- ggplot(Oxboys, aes(height,Occasion)) + geom_boxplot()
+boysbox2
+```
+There is no need to specify the group aesthetic here; the default grouping works because occasion is a discrete variable.
+```{r}
+boysbox + geom_line(aes(group = Subject), colour = "#3366FF")
+```
+
+4.5.4 Matching aesthetics to graphic objects
+
+
+4.6 Geoms
+
+4.7 Stat
+
+4.8 Position adjustments
+The five position adjustments.
+dodge:  Adjust position by dodging overlaps to the side
+fill:  Stack overlapping objects and standardise have equal height
+identity: Don't adjust position
+jitter: Jitter points to avoid overplotting
+stack: Stack overlapping objects on top of one another
+
+
+stacking, filling and dodging :
+Stacking puts bars on the same x on top of one another, filling does the same, but normalises height to 1;dodging places the bars side-by-side.
+
+Dodging is rather similar to faceting, and the advantages and disadvantages of each method are described in Section 7.2.6.
+
+The identity adjustment (i.e., do nothing) doesn't make much sense for bars, but is shown in Figure 4.9 along with a line plot of the same data for reference.
+
+
+4.9.1 Combining geoms and stats
+
+
+p491 <- ggplot(diamonds, aes(carat)) + xlim(0, 3)
+
+p491A <- p491 + stat_bin(aes(ymax = ..count..), binwidth = 0.1, geom = "area")
+p491B <- p491 + stat_bin(aes(size = ..density..), binwidth = 0.1, geom = "point", position="identity")
+p491C <- p491 + stat_bin(aes(y = 1, fill = ..count..), binwidth = 0.1, geom = "tile", position="identity")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

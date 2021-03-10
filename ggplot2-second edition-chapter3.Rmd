@@ -1,0 +1,295 @@
+---
+title: "ggplot2-second edition-chapter3"
+author: "Minh Trung DANG"
+date: "24/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+```
+
+
+3.3 Labels
+geom text()
+
+```{r}
+df <- data.frame(x = 1, y = 3:1, family = c("sans", "serif", "mono"))
+df
+```
+
+
+```{r}
+ggplot(df, aes(x, y)) +
+  geom_text(aes(label = family, family = family))
+```
+
+
+• fontface specifies the face: “plain” (the default), “bold” or “italic”.
+
+
+df33 <- data.frame(x = 1, y = 3:1, face = c("plain", "bold", "italic"))
+p33A <- ggplot(df, aes(x, y)) +
+  geom_text(aes(label = face, fontface = "face"))
+
+
+You can adjust the alignment of the text with the hjust (“left”, “center”,
+“right”, “inward”, “outward”) and vjust (“bottom”, “middle”, “top”, “inward”,
+“outward”) aesthetics. The default alignment is centered. One of
+the most useful alignments is “inward”: it aligns text towards the middle
+of the plot:
+
+
+
+```{r}
+df33A <- data.frame(x = c(1, 1, 2, 2, 1.5),
+                    y = c(1, 2, 1, 2, 1.5),
+                    text = c("bottom-left", "bottom-right","top-left", "top-right", "center"))
+df33A
+```
+
+
+```{r}
+p33B <- ggplot(df33A, aes(x, y)) + geom_text(aes(label = text))
+p33C <- ggplot(df33A, aes(x, y)) + geom_text(aes(label = text), vjust = "inward", hjust = "inward")
+
+ggarrange(p33B, p33C, ncol = 2, nrow = 1)
+```
+
+• size controls the font size. Unlike most tools, ggplot2 uses mm, rather
+than the usual points (pts). This makes it consistent with other size units
+in ggplot2.
+• angle specifies the rotation of the text in degrees.
+
+geom text() also has three parameters. Unlike the aesthetics, these only take
+single values, so they must be the same for all labels
+
+
+Often you want to label existing points on the plot. 
+You don’t want the text to overlap with the points (or bars etc), so it’s useful to offset the text a little. 
+The nudge x and nudge y parameters allow you to nudge the text a little horizontally or vertically:
+
+```{r}
+df33B <- data.frame(trt = c("a", "b", "c"), resp = c(1.2, 3.4, 2.5))
+df33B
+```
+
+
+```{r, fig.width= 12, fig.height=4}
+p33D <- ggplot(df33B, aes(resp, trt)) + 
+  geom_point() +
+  xlim(1, 3.6)
+
+p33E <- ggplot(df33B, aes(resp, trt)) + 
+  geom_point() +
+  geom_text(aes(label = paste0("(", resp, ")"))) +
+  xlim(1, 3.6)
+
+p33F <- ggplot(df33B, aes(resp, trt)) + 
+  geom_point() +
+  geom_text(aes(label = paste0("(", resp, ")")), 
+            nudge_y = -0.25) +
+  xlim(1, 3.6)
+
+ggarrange(p33D, p33E, p33F, ncol = 3, nrow =1 )
+```
+
+• If check overlap = TRUE, overlapping labels will be automatically removed.
+The algorithm is simple: labels are plotted in the order they appear in the
+data frame; if a label would overlap with an existing point, it’s omitted.
+This is not incredibly useful, but can be handy.
+
+```{r, fig.width = 10, fig.height = 5}
+p33G <- ggplot(mpg, aes(displ, hwy)) + 
+  geom_text(aes(label = model)) + 
+  xlim(1, 8)
+
+p33H <- ggplot(mpg, aes(displ, hwy)) + 
+  geom_text(aes(label = model), 
+            check_overlap = TRUE) 
++ xlim(1, 8)
+
+ggarrange(p33G, p33H,  ncol = 2, nrow = 1)
+```
+
+A variation on geom text() is geom label(): it draws a rounded rectangle behind the text. 
+This makes it useful for adding labels to plots with busy backgrounds:
+
+```{r}
+label <- data.frame(waiting = c(55, 80),
+                    eruptions = c(2, 4.3),
+                    label = c("peak one", "peak two"))
+label 
+```
+
+```{r}
+head(faithfuld)
+```
+
+
+```{r, fig.width = 10, fig.height = 5}
+
+p33I <- ggplot(faithfuld, aes(waiting, eruptions)) +
+  geom_tile(aes(fill = density)) 
+
+p33J <- ggplot(faithfuld, aes(waiting, eruptions)) +
+  geom_tile(aes(fill = density)) +
+  geom_label(data = label, aes(label = label))
+
+ggarrange(p33I, p33J,  ncol = 2, nrow = 1)
+```
+
+
+since a label has an absolute size (e.g. 3 cm), regardless of the size of the plot
+Instead, you’ll need to tweak xlim() and ylim() based on your data and plot size.
+
+```{r, fig.width = 10, fig.height = 5}
+p33J <- ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_point()
+
+p33K <-ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_point(show.legend = FALSE) +
+  directlabels::geom_dl(aes(label = class), method = "smart.grid")
+
+ggarrange(p33J, p33K,  ncol = 2, nrow = 1)
+```
+
+3.4 Annotations
+Annotations add metadata to your plot. But metadata is just data, so you can use:
+• geom_text() to add text descriptions or to label points Most plots will
+not benefit from adding text to every single observation on the plot, but
+labelling outliers and other important points is very useful.
+• geom_rect() to highlight interesting rectangular regions of the plot.
+geom_rect() has aesthetics xmin, xmax, ymin and ymax.
+• geom line(), geom path() and geom segment() to add lines. All these geoms
+have an arrow parameter, which allows you to place an arrowhead on the
+line. Create arrowheads with arrow(), which has arguments angle, length,
+ends and type.
+• geom vline(), geom hline() and geom abline() allow you to add reference
+lines (sometimes called rules), that span the full range of the plot.
+
+Typically, you can either put annotations in the foreground (using alpha if
+needed so you can still see the data), or in the background. With the default
+background, a thick white line makes a useful reference: it’s easy to see but
+it doesn’t jump out at you.
+
+```{r}
+ggplot(economics, aes(date, unemploy)) +
+geom_line()
+```
+
+
+
+We can annotate this plot with which president was in power at the time.
+There is little new in this code - it’s a straightforwardmanipulation of existing
+geoms. There is one special thing to note: the use of -Inf and Inf as positions.
+These refer to the top and bottom (or left and right) limits of the plot.
+
+```{r}
+presidential <- subset(presidential, start > economics$date[1])
+presidential 
+```
+
+```{r}
+ggplot(economics) +
+  geom_rect(aes(xmin = start, xmax = end, fill = party),
+            ymin = -Inf, ymax = Inf, alpha = 0.2,
+            data = presidential) +
+  geom_vline(aes(xintercept = as.numeric(start)),
+             data = presidential,
+             colour = "grey50", alpha = 0.5) +
+  geom_text(aes(x = start, y = 2500, label = name),
+            data = presidential,
+            size = 3, vjust = 0, hjust = 0, nudge_x = 50) +
+  geom_line(aes(date, unemploy)) +
+  scale_fill_manual(values = c("blue", "red"))
+```
+
+
+```{r, fig.height= 10, fig.width= 20}
+p33L <- ggplot(economics) +
+  geom_rect(aes(xmin = start, xmax = end, fill = party),
+            ymin = -Inf, ymax = Inf, alpha = 0.2,
+            data = presidential) +
+  scale_fill_manual(values = c("blue", "red"))
+
+p33M <- p33L +
+  geom_vline(aes(xintercept = as.numeric(start)),
+             data = presidential,
+             colour = "grey50", alpha = 0.5) +
+  scale_fill_manual(values = c("blue", "red"))
+
+p33N <- p33L + 
+  geom_vline(aes(xintercept = as.numeric(start)),
+             data = presidential,
+             colour = "grey50", alpha = 0.5) +
+  geom_text(aes(x = start, y = 2500, label = name),
+            data = presidential,
+            size = 3, vjust = 0, hjust = 0, nudge_x = 50) +
+  scale_fill_manual(values = c("blue", "red"))
+
+p33O <- p33L +
+  geom_vline(aes(xintercept = as.numeric(start)),
+             data = presidential,
+             colour = "grey50", alpha = 0.5) +
+  geom_text(aes(x = start, y = 2500, label = name),
+            data = presidential,
+            size = 3, vjust = 0, hjust = 0, nudge_x = 50) +
+  geom_line(aes(date, unemploy)) +
+  scale_fill_manual(values = c("blue", "red"))
+
+ggarrange(p33L, p33M,p33N, p33O,  ncol = 2, nrow = 2)
+```
+
+
+
+```{r, fig.height= 5, fig.width= 20}
+ggplot(diamonds, aes(log10(carat), log10(price))) +
+  geom_bin2d() +
+  facet_wrap(~cut, nrow = 1)
+```
+
+```{r}
+mod_coef <- coef(lm(log10(price) ~ log10(carat), data = diamonds))
+mod_coef
+```
+```{r}
+mod_coef[1]
+```
+```{r}
+mod_coef[2]
+```
+
+```{r, fig.height= 5, fig.width= 20}
+ggplot(diamonds, aes(log10(carat), log10(price))) + 
+  geom_bin2d() +
+  geom_abline(intercept = mod_coef[1], slope = mod_coef[2],colour = "white", size = 1) +
+  facet_wrap(~ cut, nrow = 1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

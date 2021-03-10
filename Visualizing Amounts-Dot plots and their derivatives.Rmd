@@ -1,0 +1,146 @@
+---
+title: "Visualizing Amounts: Dot plots and their derivatives"
+author: "Minh Trung DANG"
+date: "12/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+One of the simplest visualizations of a single numerical variable with a modest number of observations and lables for the observations is a dot plot, or Cleveland dot plot.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(gapminder)
+```
+
+In this post, we will use the gapminder data set (which is avaibale in package gapminder)
+The gapminder dataset is well explored in the statistic course by Professor Jennt Bryan, The University of British Columbia (https://stat545.com/)
+
+
+
+```{r, fig.height= 7.5, fig.width=7.5}
+gapminder %>% 
+  filter(year == 2007, continent == "Americas") %>% 
+  select(country, lifeExp,pop) %>% 
+  ggplot() +
+  geom_point(aes(x = lifeExp,
+                 y = reorder(country,lifeExp)),
+             color = "blue", 
+             size = 5) +
+  labs(x = "Life Expectancy (years)", y = NULL) + 
+  theme(text = element_text(size = 16), 
+        panel.border = element_rect(fill = NA, colour = "grey20")) +
+  labs(title =  "Life expectancy in Americas (2007)",
+       x = "Life expectancy (years)",
+       y = NULL) +
+  theme_minimal()
+```
+
+
+In order to highlight the best
+```{r, fig.height= 7.5, fig.width=7.5}
+gapminder %>% 
+  filter(year == 2007, continent == "Americas") %>% 
+  select(country, lifeExp,pop) %>% 
+  mutate(condition = if_else(lifeExp >= 75, ">=75","<75")) %>% 
+  mutate(highlight = factor(condition)) %>% 
+  ggplot(aes(x = lifeExp, 
+             y = reorder(country,lifeExp),
+             color = highlight)) + 
+  geom_point(size = 5) +
+  scale_color_manual(values=c("red", "blue")) +
+  labs(x = 'Life expectency (years)',
+       y = NULL,
+      title = "The top 10 causes of death in 2016") +
+  theme(axis.text = element_text(size = 14, color = "black"),
+  axis.title = element_text(size = 14, color = "black",face="bold"),
+  plot.title = element_text(color = "black", size = 14, face = "bold"),
+  plot.caption = element_text(color = "black",size = 14, face = "italic"),
+  legend.position = "none")
+```
+
+The size of the dots can be used to encode an additional numeric variable.
+This view uses area to encode population size (This is sometimes called a bubble chart)
+
+```{r, fig.height= 7.5, fig.width=10}
+gapminder %>% 
+  filter(year == 2007, continent == "Americas") %>% 
+  select(country, lifeExp,pop) %>% 
+  ggplot() +
+  geom_point(aes(y = reorder(country, lifeExp),
+                 x = lifeExp,
+                 size = pop/1000000),
+             col = "blue") +
+  labs(x = "Life Expectancy (years)", y = NULL) +
+  scale_size_area("Population\n(Millions)", max_size = 8) +
+  theme(text = element_text(size = 16), 
+        panel.border = element_rect(fill = NA, colour = "grey20")) +
+  theme_minimal()
+```
+
+We can also compare data. 
+Example: filter down to data for 2002 and 2007 for the Americas
+
+```{r, fig.height= 7.5, fig.width=10}
+gapminder %>%
+  filter(year >= 2002, continent == "Americas") %>% 
+  mutate(Year = factor(year)) %>% 
+  ggplot() +
+    geom_point(aes(y = reorder(country, lifeExp),
+                x = lifeExp,
+                size = 2,
+                color = Year)) +
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  labs(x = "Life Expectancy (years)", y = NULL) +
+  theme(text = element_text(size = 16), 
+        panel.border = element_rect(fill = NA, colour = "grey20")) +
+  theme_minimal()
+```
+
+
+All countries show some improvement in life expectancy.
+The small improvement for Jamaica.
+The result is sometimes called a dumbbell chart
+
+```{r, fig.height= 7.5, fig.width=10}
+gapminder %>%
+  filter(year >= 2002, continent == "Americas") %>% 
+  mutate(Year = factor(year)) %>% 
+  ggplot(aes(y = reorder(country, lifeExp),
+           x = lifeExp)) +
+  geom_line(aes(group = country), 
+            size = 1.5, 
+            color = "grey") +
+  geom_point(aes(color = Year),
+             size = 4) +
+  scale_color_manual(values=c("red", "blue")) +
+  labs(x = "Life Expectancy (years)", y = NULL) +
+  theme(text = element_text(size = 16), 
+        panel.border = element_rect(fill = NA, colour = "grey20")) +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+

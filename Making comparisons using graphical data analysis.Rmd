@@ -1,0 +1,365 @@
+---
+title: "Making comparisons using graphical data analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Comparisons may be
+
+- specific 
+
+- general s
+
+- at different levels 
+
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+data(bank, package="gclus")
+```
+
+```{r}
+bank2 <- within(bank, st <- ifelse(Status==0,"genuine","forgery"))
+
+c1 <- ggplot(bank2,aes(x=Diagonal)) +
+  geom_histogram(binwidth=0.2) + facet_grid(st~.)
+
+c2 <- ggplot(bank2, aes(x=Right)) + 
+  geom_histogram(binwidth=0.1) +facet_grid(st~.)
+
+grid.arrange(c1, c2, ncol=2)
+```
+
+```{r}
+t.test(Right~ st,
+       data = bank2,var.equal = T)
+```
+
+```{r}
+t.test(Diagonal ~ st,
+       data = bank2, var.equal = T)
+```
+
+t-tests confirm that the differences in means between the two groups are highly significant. 
+
+The graphics show that the distribution patterns differ.
+
+
+
+# 10.3 Making visual comparisons
+
+
+## Comparing to a standard
+Albert Abraham Michelson
+Michelson's measurements of the speed of light (used in Exercise 4 in Chapter 1) are shown in Figure 10.2 with a red dotted line added, showing the current estimate of the speed of light adjusted for traveling through air. Although the range of values obtained by Michelson contains the ‘true' value, a 95% confidence interval based on these data does not. Using
+
+```{r}
+library(HistData)
+```
+
+```{r}
+data(Michelson, package="HistData")
+```
+
+
+```{r}
+tc <- t.test(Michelson, mu=734.5)
+tc
+```
+
+
+The t-test gives a confidence interval of 836.72 to 868.08.
+
+
+```{r}
+ggplot(Michelson, aes(x=velocity)) + 
+  geom_bar(width =10) +
+  geom_vline(xintercept = 734.5, 
+             colour="red",
+             linetype = "longdash") +
+  xlab("Speed of light in kms/sec (less 299,000)")
+```
+
+Michelson′s data for the speed of light from 1879. Most of his observations were higher than the relevant currently accepted value, which would be 734.5 on this scale (marked in red).
+
+## Comparing new data with old data
+
+
+There are at least two datasets with petrol consumption data for cars in R, mtcars with information on 32 models from 1973-4 and Cars93 from the MASS package with information on 93 car models on sale in the USA in 1993
+
+
+```{r}
+library(MASS)
+```
+
+```{r}
+
+data(Cars93, package="MASS")
+```
+
+```{r}
+c3 <- ggplot(mtcars, 
+             aes(x = mpg)) + 
+  geom_histogram(binwidth=1, color = "red", fill = "red") + 
+  xlim(10,50) + 
+  xlab("mpg for 32 cars from 1973-4")
+
+c3
+
+```
+```{r}
+c4 <- ggplot(Cars93, aes(MPG.city)) +
+  geom_histogram(binwidth=1, color = "blue", fill = "blue") + 
+  xlim(10,50) +
+  xlab("mpg in city driving for 93 cars from 1993") 
+c4
+```
+```{r}
+grid.arrange(c3, c4, nrow=2)
+```
+
+Comparing miles per gallon distributions for cars from 1973-4 and 1993. The later cars appear to have a slightly better performance and it should be taken into account that the mpg figures for them are only for city driving.
+
+```{r}
+tf <- t.test(Cars93$MPG.city, mtcars$mpg)
+tf
+```
+A comparison of the means with a t-test shows that the means are not significantly different, with a p-value of 0.067 and a 95% confidence interval of -0.16 to 4.71.
+
+##Comparing subgroups
+
+comparisons of two of the variables from the Swiss Banknote dataset. Histograms are effective for comparing two groups and can reveal a lot of data details. They are less effective when there are several groups.
+
+
+
+
+## Comparing time series 
+Playfair's import/export data
+
+```{r}
+library(GDAdata)
+```
+
+```{r, fig.height= 10, fig.width = 10}
+b1 <- ggplot(EastIndiesTrade, aes(x=Year, y=Exports)) + 
+    ylim(0,2000) + geom_line(colour="red", size=2) + 
+    geom_line(aes(x=Year, y=Imports),
+    colour="yellow", size=2) + 
+    geom_ribbon(aes(ymin=Exports, ymax=Imports),
+    fill="pink",alpha=0.5) +
+    ylab("Exports(red) and Imports(yellow)")
+b2 <- ggplot(EastIndiesTrade, aes(x=Year,
+    y=Exports-Imports)) + geom_line(colour="green")
+b3 <- ggplot(EastIndiesTrade, aes(x=Year,
+    y=(Exports-Imports)/((Exports + Imports)/2))) + 
+    geom_line(colour="blue")
+grid.arrange(b1, b2, b3, nrow=3)
+
+```
+```{r}
+ggplot(EastIndiesTrade, 
+       aes(x=Year, y=Exports)) + 
+  ylim(0,2000) + 
+  geom_line(colour="red", size=2) +
+  geom_line(aes(x=Year, y=Imports),
+    colour="yellow", size=2) + 
+    geom_ribbon(aes(ymin=Exports, ymax=Imports),
+    fill="pink",alpha=0.5) +
+    ylab("Exports(red) and Imports(yellow)")
+```
+
+
+```{r}
+ggplot(data = EastIndiesTrade) + 
+  ylim(0,2000) + 
+  geom_line(aes(x= Year, 
+                y= Exports),
+            colour="red", 
+            size = 2) +
+  geom_line(aes(x=Year, 
+                y = Imports),
+            colour="blue", 
+            size = 2) +
+  geom_ribbon(aes(x=Year,
+                  ymin = Exports, 
+                  ymax = Imports),
+              fill = "yellow",
+              alpha = 0.25) +
+  ylab("Exports(red) and Imports(blue)")
+```
+
+```{r}
+ggplot(EastIndiesTrade, 
+       aes(x = Year,
+           y = Exports-Imports)) + 
+  geom_line(colour = "purple",
+            size = 2)
+```
+
+```{r}
+ggplot(EastIndiesTrade, aes(x=Year,
+                            y=(Exports-Imports)/((Exports + Imports)/2))) + 
+    geom_line(colour="darkblue", size = 2)
+```
+
+## 10.4 Comparing group effects graphically
+
+
+
+The famous barley dataset.
+
+The aim of the study was to compare ten varieties of barley by looking at yields in two successive years at each of six testing station sites. 
+
+The yields for the two years are a little different, with those for 1931 looking higher than those for 1932.
+
+
+```{r}
+library(lattice)
+```
+
+```{r}
+head(barley)
+```
+
+```{r}
+ggplot(barley, 
+       aes(yield, fill = year)) + 
+  geom_histogram(binwidth=5) + 
+  ylab("") + 
+  facet_wrap(~year, ncol=1) +
+  theme(legend.position = "none")
+```
+
+It is the differences in yield by variety that are mainly of interest and drawing ten histograms would not be practical, even if there was enough data to justify it. Figure 10.8 shows parallel dotplots of the 12 values for the ten varieties in the upper plot and confidence intervals for the variety means in the lower plot. The plots suggest that there is little difference between the varieties.
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r, fig.height= 7, fig.width= 10}
+c1 <- ggplot(barley, 
+             aes(x=variety, 
+                 y=yield)) + geom_point() + ylim(10,70)
+barl1 <- barley %>% group_by(variety) %>% 
+    summarise(N = n(), mean = mean(yield),
+    sd = sd(yield), se = sd/sqrt(N))
+lims <- aes(ymax = mean + 2*se, ymin=mean - 2*se)
+
+
+p1 <- ggplot(barl1, aes(x=variety, y=mean)) + 
+   geom_point() + ylim(10,70) + 
+   geom_errorbar(lims, width=0.2) 
+grid.arrange(c1, p1)
+```
+
+
+```{r, fig.height= 5, fig.width = 7.5}
+ggplot(barley, aes(x=variety, 
+                   y=yield)) + 
+  geom_point() + ylim(10,70)
+```
+
+```{r, fig.height= 5, fig.width=7.5}
+barley %>% 
+  group_by(variety) %>% 
+  summarise(N = n(), 
+            mean = mean(yield),
+            sd = sd(yield), 
+            se = sd/sqrt(N)) %>% 
+  ggplot(aes(x=variety, y=mean)) + 
+  geom_point() + 
+  ylim(10,70) + 
+  geom_errorbar(aes(ymax = mean + 2*se, 
+                     ymin=mean - 2*se), width=0.2) 
+```
+
+Confidence intervals for yields by year for each site.
+It is obvious that there are clear differences between the sites and between the years within the sites. The odd pattern for the Morris site that Cleveland remarked on, with the data possibly reversed for the two years, can also be seen.
+
+
+```{r}
+barley %>%
+  mutate(Year = factor(year,
+                       levels = c("1931", "1932"))) %>% 
+  group_by(site, Year) %>%
+  summarise(N = n(), 
+            mean = mean(yield), 
+            sd = sd(yield), 
+            se = sd/sqrt(N)) %>% 
+  ggplot(aes(colour = Year, 
+             x = site, 
+          y = mean)) +
+  scale_colour_manual(values = c("red", "blue"))+
+  geom_point(size = 4) + 
+  geom_errorbar(aes(ymax = mean + 2*se, 
+                    ymin = mean - 2*se),
+                size = 1,
+                width = 0.2) +
+  ylim(10,70) + 
+  theme(legend.position = "bottom")
+```
+Confidence intervals for mean barley yields by year for each site. The data for 1931 are lower than for 1932 at all sites barring Morris.
+
+To identify differences between the varieties, both site and year have to be taken into account to make an effective comparison.
+
+##10.5 Comparing rates visually
+
+```{r}
+t1 <- data.frame(Titanic) 
+t1m <- t1[t1$Sex=="Male",]
+xt1 <- xtabs(Freq ~ Class, data=t1m[t1m$Survived=="Yes",])
+xt2 <- xtabs(Freq ~ Class, data=t1m)
+surv <- xt1/xt2
+survS <- (surv*(1-surv)/xt2)^0.5
+su <- data.frame(cbind(surv, survS))
+su$Class <- rownames(su)
+lims <- aes(ymax = surv + 2*survS, ymin=surv - 2*survS)
+ggplot(su, aes(x=Class, y=surv)) + geom_point() +
+geom_errorbar(lims, width=0.1, colour="blue") +
+  ylim(0,0.5) + ylab("Male survival rate")
+```
+
+
+## 10.6 Graphics for comparing many subsets
+Trellis displays  are an effective means of looking at displays of many subsets at the same time.
+
+
+Big differences for particular subsets stand out; smaller differences are more difficult to spot.
+
+
+Rearranging the order of the panels can help.
+
+
+Trellis graphics can be drawn in R using the lattice package or the facetting options in ggplot2
+
+It is interesting to compare the trellis graphic with a single scatterplot of the two variables in which the areas have been allocated different colours.
+
+Some features are easier to see, others not.
+
+## 10.7 Graphics principles for comparisons
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

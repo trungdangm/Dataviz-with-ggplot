@@ -1,0 +1,397 @@
+---
+title: "Examining Continuous Variables"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+library(flexclust)
+```
+
+```{r}
+data(btw2009, package = "flexclust")
+
+btw2009 <- within(btw2009, Linke2 <- 100*LINKE2/valid2)
+
+ggplot(btw2009, aes(Linke2)) + 
+  geom_histogram(fill = "mediumpurple") + 
+  ylab("") +  
+  xlab("Percentage voter support for Die Linke in 2009")
+```
+
+
+# 3.2 What features might continuous variables have?
+
+
+**Asymmetry** 
+The distribution is skewed to the left or right, for instance distributions of income.
+
+**Outliers**
+
+There are one or more values that are far from the rest of the data.
+
+**Multimodality**
+
+The distribution has more than one peak, e.g., both variables in the Old Faithful geyser data.
+
+**Gaps** 
+
+There are ranges of values within the data where no cases are recorded. This can happen with exam marks, where there are no cases just below the pass mark.
+
+**Heaping** 
+some values occur unexpectedly often.
+Perhaps there are more important things to do than to weigh the newborn baby to the nearest gram or ounce ...
+
+**Rounding** 
+
+only certain values (perhaps integers) are found, e.g., age distributions.
+
+**Impossibilities** 
+
+Values outside the feasible range, for instance negative ages.
+
+**Errors** 
+Values that look wrong for one reason or another. 
+
+
+
+
+Graphics are good for displaying the features that make up the shapes of data distributions. They can provide more and different kinds of information than a set of summary statistics. **Obviously it is best to use both approaches.**
+
+With a single variable, the mean is usually the most important statistic and perhaps no statistical test is used as often as the t-test for testing means. 
+
+A t-test can be used if the underlying data are from a normal distribution. 
+
+For small data sets (and the t-test is intended specifically for small samples) data from a normal distribution can look very non-normal, which is why tests of normality have low power and provide little support for t-tests. 
+
+Fortunately, the t-test is fairly robust against non-normality. This should not prevent anyone from at least checking whether the data have some seriously non-normal feature before carrying out analyses. That can best be done graphically.
+
+
+## 3.3 Looking for features
+
+Galton's heights
+
+```{r}
+library(UsingR)
+```
+```{r}
+data(galton, package="UsingR")
+
+ht <- "height (in)"
+
+par(mfrow=c(1,2), 
+    las=1, 
+    mar=c(3.1, 4.1, 1.1, 2.1))
+
+with(galton, 
+     {hist(child, xlab=ht, main="Children", col="green")
+       hist(parent, xlab=ht, main="Parents", col="blue")})
+```
+
+
+
+```{r}
+d1 <- ggplot(galton, aes(child)) + geom_bar() +
+    xlim(60, 75) + ylim(0, 225) + ylab("") +
+    geom_vline(xintercept=median(galton$child),
+    col="red")
+d2 <- ggplot(galton, aes(parent)) + geom_bar() +
+    xlim(60, 75) + ylim(0, 225) + ylab("") +
+    geom_vline(xintercept=median(galton$parent),
+    col="red")
+grid.arrange(d1, d2)
+```
+
+
+
+
+## Some more heights—Pearson
+There is another dataset of father and son heights in the UsingR package. This stems from Karl Pearson and includes 1078 paired heights. His paper with Alice Lee [Pearson and Lee, 1903] includes a detailed description of how the data were collected. Families were invited to provide their measurements to the nearest quarter of an inch with the note that “the Professor trusts to the bona fides of each recorder to send only correct results.” The dataset was used in the well-known text [Freedman et al., 2007] and a scatterplot of the data is on the book's cover. As the data are given to five decimal places and as each one of the father's heights is a unique value (even though we know there must have been repeats), someone must have jittered the data.
+
+The father and son height distributions can be displayed as histograms with overlaid density estimates (Figure 3.5). Densities can only be successfully overlaid when the histogram scales are densities instead of frequencies, which is why y=..density.. is needed. Both distributions look fairly normal, as we might expect, and, if anything, an initial look would suggest that the heights of the sons look more normal than the heights of the fathers.
+
+```{r}
+data(father.son, package="UsingR")
+```
+
+
+```{r}
+
+e1 <- ggplot(father.son, aes(sheight)) +
+    geom_histogram(aes(y = ..density..), binwidth=1) +
+    geom_density() + xlim(58, 80) + ylim(0, 0.16) +
+    xlab("ht (inches)") + ylab("") + ggtitle("Sons")
+
+e2 <- ggplot(father.son, aes(fheight)) +
+    geom_histogram(aes(y = ..density..), binwidth=1) +
+    geom_density() + xlim(58, 80) + ylim(0, 0.16) + 
+    xlab("ht (inches)") + ylab("") +
+    ggtitle("Fathers")
+
+grid.arrange(e1, e2, nrow = 1)
+```
+
+
+
+Both distributions look fairly normal. For comparison purposes the plots have been common-scaled.
+
+```{r}
+par(mfrow=c(1,2), las=1, mar=c(3.1, 4.1, 1.1, 2.1))
+with(father.son, {
+ qqnorm(sheight, main="Sons", xlab="",
+   ylab="", pch=16, ylim=c(55,80)) 
+ qqline(sheight)
+ qqnorm(fheight, main="Fathers", xlab="",
+   ylab="", pch=16, ylim=c(55,80))
+ qqline(fheight)})
+```
+Q-Q plots of the heights of fathers and sons from the dataset father.son with lines added going through the 25% and 75% quantiles. The distribution of the fathers' heights now looks more normal than the distribution of the sons' heights, because of the deviations in the upper and lower tails for the sons.
+
+
+
+```{r}
+par(mfrow=c(1,1), mar=c(3.1, 4.1, 1.1, 2.1))
+with(MASS::hills,
+ boxplot(time, horizontal=TRUE, pch=16, ylim=c(0, 220)))
+```
+
+A boxplot of the record times for the hills dataset. The distribution is skew to the right with a few high outliers, races which must have been more demanding than the other
+
+### How are the variables in the Boston dataset distributed?
+
+The Boston housing data is a dataset from 1978 that has been analysed many times. There are two versions in R, the original one in MASS and a corrected one in DAAG, in which 5 median house values have been ‘corrected'.
+
+There are 14 variables for 506 areas in and around Boston. The main interest lies in the median values of owner-occupied homes by area and here we will use the original dataset. 
+
+Default histograms (drawn with either hist(medv) or truehist(medv)) hint that there might be some interesting structure and that other binwidths or graphics might be useful, while Figure 3.8, drawn with ggplot, highlights two features: 
+
+there are surprisingly many areas in the final bin and there is a sudden drop in the counts round about the middle. 
+
+A binwidth matching the data units, say 1 or 2, would be better.
+
+```{r}
+ggplot(MASS::Boston, aes(medv)) + geom_bar() + ylab("") + 
+  xlab("Median housing value (thousands of dollars)")
+```
+
+
+```{r}
+
+library(tidyr)
+B2 <- gather(MASS::Boston, BosVars, BosValues, crim:medv)
+ggplot(B2, aes(BosValues)) + geom_histogram() + xlab("") +
+  ylab("") + facet_wrap(~ BosVars, scales = "free")
+```
+
+Plots like these are not ideal. 
+
+In particular, the default scaling of 30 bins works better for some than for others. 
+
+Nevertheless, this is a quick and easy way to get an overview of the data and you can always redraw any individual plots which you think deserve a closer look. 
+
+Note that the vertical scales vary from maxima of 40 to over 400. 
+
+If you plot the histograms individually, choosing binwidths and scale limits are the main decisions to betaken. 
+
+
+Occasionally the anchorpoint, where the first bin starts, and whether the bins are open to the left or to the right can make a difference. The latter becomes an issue if many points lie on bin boundaries. Compare the two histograms produced by default by hist (open to the left) and truehist (open to the right) for the variable ptratio.
+
+```{r}
+with(Boston, hist(ptratio))
+```
+
+
+```{r}
+with(Boston, truehist(ptratio))
+```
+
+Histograms of datasets with rounded values need to be checked for these effects. And in case you are wondering, ggplot is open to the left like hist.
+
+It is worth considering what other plots of the variable medv might show. Here are some you could look at:
+
+
+
+
+Boxplots
+
+```{r}
+boxplot(Boston$medv, pch=16)
+```
+
+Jitterered dotplots
+
+```{r}
+stripchart(Boston$medv, method="jitter", pch=16)
+```
+Stem and leaf plots
+
+```{r}
+stem(Boston$medv)
+```
+
+Density estimates with a rugplot
+```{r}
+d1 <- density(Boston$medv)
+plot(d1, ylim=c(0,0.08))
+rug(Boston$medv)
+lines(density(Boston$medv, d1$bw/2), col="green")
+lines(density(Boston$medv, d1$bw/5), col="blue")
+```
+
+
+Some of these work much better than others in revealing features in the data. 
+
+There is no optimal answer for how you find out information, it is only important that you find it.
+
+Note that what density estimates show depends greatly on the bandwidth used, just as what histograms show depends on the binwidth used, although histograms also depend on their anchorpoint. 
+
+One graphic may work best for you and another may work best for someone else. Be prepared to use several alternatives.
+
+
+
+
+## Hidalgo stamps thickness
+
+The dataset Hidalgo1872 is available in the package MMST, which accompanies the textbook “Modern Multivariate Statistical Techniques” [Izenman, 2008]. The dataset was first discussed in detail in 1988 in [Izenman and Sommer, 1988]. A keen stamp collector called Walton von Winkle had bought several collections of Mexican stamps from 1872-1874 and measured the thickness of all of them. The thickness of paper used apparently affects the value of the stamps to collectors, and Izenman's interest was in looking at the dataset as a mixture of distributions. There are 485 stamps in the dataset and for some purposes the stamps may be divided into two groups (the years 1872 and 1873-4). We shall examine the full set here first.
+
+The aim is to investigate what paper thicknesses may have been used, assuming that each shows some kind of variability. Figure 3.10 displays a histogram with a binwidth of 0.001 (the measurements were recorded to a thousandth of a millimeter) and two density estimates, one using the bandwidth selected by the density function and one using the direct plug-in bandwidth, dpik, described in [Wand and Jones, 1995], used in the kde function of package ks.
+
+
+
+
+## How long is a movie?
+
+
+Nevertheless there are some largish datasets to be found, for instance the dataset movies in ggplot2 with 58,788 cases and 24 variables (which on no account should be confused with the small dataset of the same name in UsingR with 25 cases and 4 variables, nor indeed with the larger more up-to-date version with 130,456 films in the package bigvis). Strangely, rather modestly, the help page says there are only 28,819 cases. One of the variables is the movie length in minutes and it is interesting to look at this variable in some detail, starting with the default histogram (Figure 3.11) and boxplot (Figure 3.12) using ggplot2.
+
+movies dataset is no longer in ggplot2
+
+
+##3.4 Comparing distributions by subgroups 
+
+```{r}
+data(btw2009, package = "flexclust")
+```
+
+```{r}
+btw2009 <- within(btw2009, Bundesland <- state)
+btw2009 <- within(btw2009, levels(Bundesland) <- c("BW", "BY", "BE", "BB","HB", "HH", "HE", "MV", "NI", "NW","RP", "SL", "SN", "ST", "SH", "TH"))
+
+ggplot(btw2009, 
+       aes(Bundesland, LINKE2)) + 
+  geom_boxplot(varwidth=TRUE) +
+  ylab("")
+```
+Boxplots of Die Linke support by Bundesland. Standard abbreviations for the Bundesländer have been added to the dataset to make the labels readable. In the old East (BB, MV, SN, ST, TH) Die Linke were relatively strong, in the old West they were weak, apart from in Saarland (SL). Berlin (BE), made up of East and West, straddles both groups. Boxplot widths are a function of Bundesland size.
+
+
+# 3.5 What plots are there for individual continuous variables?
+
+To display continuous data graphically you could use 
+
+**histogram** grouping data into intervals, and drawing a bar for each interval, shows the empirical distribution.
+
+
+**boxplot**
+displaying individual outliers and robust statistics for the data, useful for identifying outliers and for comparisons of distributions across subgroups.
+
+**dotplot** 
+plotting each point individually as a dot, good for spotting gaps in the data.
+
+**rugplot** 
+plotting each point individually as a line, often used as an additional plot along the horizontal axis of another display.
+
+**density**
+estimate plotting an estimated density of the variable's distribution, so more like a model than a data display.
+
+**distribution** 
+estimate showing the estimated distribution function, useful for comparing distributions, if one is always ‘ahead' of another.
+
+**Q-Q plot**
+comparing the distribution to a theoretical one (most often a normal distribution).
+
+And there are other possibilities too 
+
+**frequency polygon**
+
+**P-P plot**
+
+**average shifted histogram**
+
+**shorth plot**
+
+**beanplot**
+
+For more subtle effects the best approach in exploratory analysis is to draw a variety of plots. 
+
+There is some general advice to follow, such as 
+
+- histograms being poor for small datasets, 
+
+- dotplots being poor for large datasets
+
+- boxplots obscuring multimodality, but it is surprising how often even apparently inappropriate graphics can still reveal information. 
+
+The most important advice remains—which is why it is now repeated—to draw a variety of plots.
+
+
+
+# 3.6 Plot options
+
+
+There is an intriguing and impressive literature on the data-driven choice of binwidths for histograms. 
+
+[Scott, 1992] and articles by Wand (for example, [Wand, 1997]) are reliable sources. 
+
+In practice there are often good reasons for choosing a particular binwidth that is not optimal in a mathematical sense. 
+
+The data may be ages in years, or times in minutes, or distances in miles. 
+
+Using a non-integer binwidth may be mathematically satisfying, but can conceal useful empirical information.
+
+
+It is important to remember that histograms are for presenting data; they are poor density estimators. 
+
+There are far better approaches for estimating a possible density generating the data. 
+
+And it is worth bearing in mind that methods for determining optimal histogram binwidth assume a given anchor-point, i.e., the starting point of the first bin. 
+
+Both display parameters should really be used for optimisation. 
+
+In his package ggplot2 Wickham does not attempt to find any ‘optimal' choice, but uses 30 bins and prints a message explaining how to change the binwidth. That is a practical solution.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

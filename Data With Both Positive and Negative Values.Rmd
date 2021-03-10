@@ -1,0 +1,72 @@
+---
+title: "Data With Both Positive and Negative Values"
+author: "Minh Trung DANG"
+date: "18/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+2.1. Data With Both Positive and Negative Values
+
+2.2. Grouped Bar Charts
+A grouped bar chart can be used to show two measurements, e.g. two times.
+
+This visualization would be more effective for
+
+- a smaller number of categories
+- with more variation in rations within and between categories.
+
+In this case the dot plot is a much better choice.
+
+2.3. Stacked Bar Charts
+
+A stacked bar chart is appropriate when adding the values within a category to form a total makes sense
+
+
+The combined bars show the totals.
+The bar segments show the contribution of each year within the sites.
+Comparing 1931 yields across sites is easy; comparing 1932 values is harder.
+A stacked bar chart would make no sense for the two-year life expectancy data.
+
+
+Category Order
+
+Ordering of categories can change the visual effectiveness of bar charts.
+
+Faceting
+Faceting can be used with dot plot and bar charts as well:
+
+
+:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, fig.height= 8.0, fig.width=8}
+ggplot(df, aes(x = country, y = diff, label = country)) + 
+  geom_col(aes(fill = type), width = 0.5, alpha = 0.8)  +
+  scale_y_continuous(expand = c(0, 0), 
+                     labels = scales::dollar) +
+  scale_fill_manual(labels = c("Above median", "Below median"),
+                    values = c("Above" = "purple", "Below" = "blue")) + 
+  labs(title =  "GDP per capita, 2007",
+       x = NULL,
+       y = NULL,
+       fill = NULL) + 
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank())
+```

@@ -1,0 +1,364 @@
+---
+title: "Visualizing Associations among quantitative variables : Scatter plots"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r }
+ggplot(BlueJays, aes(Mass, Head)) + 
+  geom_point(pch = 21, 
+             fill = "gray25", 
+             color = "white", size = 5) +
+  scale_x_continuous(name = "Body mass (g)") +
+  scale_y_continuous(name = "Head length (mm)") 
+```
+
+```{r}
+ggplot(BlueJays, 
+       aes(Mass, Head, fill = KnownSex)) + 
+  geom_point(pch = 21, color = "white", size = 5) +
+  scale_x_continuous(name = "Body mass (g)") +
+  scale_y_continuous(name = "Head length (mm)") +
+  scale_fill_manual(values = c(F = "blue", M = "red"),
+                    breaks = c("F", "M"),
+                    labels = c("female birds   ", "male birds"),
+                    name = NULL,
+                    guide = guide_legend(direction = "horizontal",
+                                         override.aes = list(size = 5))) +
+  theme(legend.position = "bottom",
+        legend.justification = "right",
+        legend.box.spacing = unit(3.5, "pt"), # distance between legend and plot
+        legend.text = element_text(vjust = 0.6),
+        legend.spacing.x = unit(2, "pt"),
+        legend.background = element_rect(fill = "white", color = NA),
+        legend.key.width = unit(10, "pt"))
+```
+
+```{r}
+library(VGAMdata)
+```
+
+```{r}
+data(oly12)
+```
+
+```{r}
+ggplot(oly12, 
+       aes(Height, Weight, fill = Sex)) + 
+  geom_point(pch = 21, color = "white", size = 3) +
+  scale_x_continuous(name = "Height (m)") +
+  scale_y_continuous(name = "Weight (kg)") +
+  scale_fill_manual(values = c(F = "blue", M = "red"),
+                    breaks = c("F", "M"),
+                    labels = c("Female", "Male"),
+                    name = NULL,
+                    guide = guide_legend(direction = "horizontal",
+                                         override.aes = list(size = 5))) +
+  ggtitle(label = "Athletes at the London Olympics 2012",
+       subtitle = "Weight against Height from the dataset oly12 in the package VGAMdata") +
+  theme(legend.position = "top",
+        legend.justification = "right",
+        legend.box.spacing = unit(3.5, "pt"), # distance between legend and plot
+        legend.text = element_text(vjust = 0.6),
+        legend.spacing.x = unit(2, "pt"),
+        legend.background = element_rect(fill = "white", color = NA),
+        legend.key.width = unit(10, "pt"),
+        plot.title = element_text(color = "purple", size = 12, face = "bold"),
+        plot.subtitle = element_text(color = "black"))
+```
+
+Weight against Height from the dataset oly12 in the package VGAMdata
+
+The expected relationship between weight and height can be clearly seen, although it is a little obscured by some outliers, which distort the scales, and drawing a second plot with tighter limits would show the bulk of the data better.
+
+There is evidence of discretisation in the height measurements (notice the parallel vertical lines) and the same effect would be visible for the weight measurements but for the outliers
+
+Given the large number of points, there is also a lot of overplotting, and most of the points in the middle of the plot represent more than one case (there are 57 athletes who are 1.7m in height and weigh 60kg).
+
+
+
+
+Karl Pearson investigated the influence of drink on various aspects of family life at the beginning of the twentieth century. The dataset DrinksWages is in the collection of historic datasets made available in the package HistData. Figure 5.2 shows a scatterplot of wage (average weekly wage in shillings) plotted against drinks/n (the proportion of drinkers) for 70 different trades. There is no apparent relationship.
+
+
+```{r}
+library(HistData)
+data(DrinksWages)
+```
+
+```{r, fig.width= 10}
+ggplot(DrinksWages, aes(drinks/n, wage)) + 
+  geom_point() +
+  xlab("Proportion of drinkers") + 
+  xlim(0,1) + 
+  ylim(0,40) +
+  ggtitle(label = "Wage (average weekly wage in shillings) and the proportion of drinkers for 70 different trades",
+       subtitle = "Average wages against proportion of drinkers for all 70 trades in Pearson’s DrinksWages dataset in the HistData package") +
+  theme(legend.position = "top",
+        legend.justification = "right",
+        legend.box.spacing = unit(3.5, "pt"), # distance between legend and plot
+        legend.text = element_text(vjust = 0.6),
+        legend.spacing.x = unit(2, "pt"),
+        legend.background = element_rect(fill = "white", color = NA),
+        legend.key.width = unit(10, "pt"),
+        plot.title = element_text(color = "purple", size = 12, face = "bold"),
+        plot.subtitle = element_text(color = "black"))
+```
+
+# Case 4 Old Faithful
+The Old Faithful geyser in Yellowstone National Park in Wyoming is a famous tourist attraction. The dataset geyser in MASS provides 299 observations of the duration of eruptions and the time to the next eruption. Figure 5.4 plots the data.
+
+```{r}
+data(geyser, package="MASS")
+ggplot(geyser, aes(duration, waiting)) + geom_point()
+```
+
+
+
+A short duration implies a long waiting time until the next eruption, while a long duration can imply a short or long waiting time. There maybe 3 clusters and possibly a couple of outlying values, but there is also a suggestion of rounded values for the eruption durations (note the numbers of durations of 2 and 4 minutes). To assess the possibility of clustering, consider a density estimate. Figure 5.5 displays contours of a bivariate density estimate supporting the idea of there being three clusters.
+
+The same scatterplot with bivariate density estimate contours. There is evidence of three concentrations of data, two univariate outliers (one eruption with low duration and one with a high waiting time until the next eruption), and one bivariate outlier.
+
+```{r}
+library(hdrcde)
+```
+
+```{r}
+ggplot(geyser, aes(duration, waiting)) + 
+  geom_point() + 
+  geom_density2d()
+```
+
+Contour plots of density estimates show equal levels of the estimated density function, but are not associated with probabilities. Using the hdrcde package you can estimate highest density regions, the smallest areas not including specified proportions of the distribution. Figure 5.6 displays the geyser data in this way for the proportions 1%,5%,50%,75%. This suggests pretty much the same outliers as before, but does not support the three concentrations conclusion as strongly.
+
+```{r}
+par(mar=c(3.1, 4.1, 1.1, 2.1))
+with(geyser, 
+     hdr.boxplot.2d(duration, 
+                    waiting,
+                    show.points=TRUE, prob=c(0.01,0.05,0.5,0.75)))
+```
+There is less evidence of three data concentrations than in the previous plot and there is a slightly different set of possible outliers.
+
+With a margin of error of 10 minutes, Old Faithful will erupt 65 minutes after an eruption lasting less than 2.5 minutes or 91 minutes after an eruption lasting more than 2.5 minutes.
+
+
+
+# 5.4 Adding models: lines and smooths
+
+
+
+## Cars and mpg
+The dataset Cars93 from MASS contains 27 pieces of information for 93 cars. The data were collected around twenty years ago [Lock, 1993]. Plotting MPG.city against Weight clearly shows a nonlinear relationship, as fuel economy decreases with weight quite quickly initially and then more slowly (Figure 5.8).
+
+
+```{r}
+data(Cars93, package="MASS")
+
+
+ggplot(Cars93, aes(Weight, MPG.city)) + 
+  geom_point() + 
+  geom_smooth(colour="blue") + ylim(0,50)
+```
+A scatterplot of MPG.city against Weight for the Cars93 dataset. A smooth has been overlaid. Heavier cars get progressively fewer miles to the gallon. The car weighing about 2350 pounds with a relatively high mpg was the Honda Civic. The y axis has been drawn from 0 to emphasise the lower limit of the mpg value.
+
+
+## Pearson heights
+Figure 5.9 shows the fathers and sons height data of Pearson (already discussed in Section 3.3) with the best linear fit added, together with a 95% pointwise confidence interval. The y = x diagonal has been drawn for comparative purposes.
+
+```{r}
+data(father.son, package="UsingR")
+ggplot(father.son, aes(fheight, sheight)) + geom_point() + 
+  geom_smooth(method="lm", colour="red") + 
+  geom_abline(slope=1, intercept=0)
+```
+
+
+A scatterplot of sons’ heights against fathers’ heights from the dataset father.son. The best fit regression line has a slope of just over 0.5, as can be seen by comparison with the line y = x. The height of a man is influenced by the height of his father, but there is a lot of unexplained variability (the correlation is almost exactly 0.5)
+
+Figure 5.9 illustrates regression to the mean. Tall fathers have sons who are tall, but on average not as tall as their fathers. Small fathers have sons who are small, but on average not as small as their fathers. The fit of the model can be examined with
+
+
+```{r}
+
+data(father.son, package="UsingR")
+m1 <- lm(sheight~fheight, father.son)
+summary(m1)
+par(mfrow=c(2,2))
+plot(m1)
+```
+
+
+
+To explore further whether a non-linear model might be warranted, you could fit a smoother or plot a smoother and the best fit regression line together. For these data, a linear model is fine, since the two curves are practically identical, as you can see in Figure 5.10.
+
+
+```{r}
+data(father.son, package="UsingR")
+ggplot(father.son, aes(fheight, sheight)) + geom_point() + 
+  geom_smooth(method="lm", colour="red", se=FALSE) + 
+  stat_smooth()
+```
+A scatterplot of sons’ heights against fathers’ heights with both a linear regression line and a smoother overlaid. The two models are in close agreement and the line lies inside the confidence interval of the smooth. A lot of unexplained variability remains.
+
+
+
+Adding a line or a smooth (or both) makes modelling explicit. When you look at a graphic you employ implicit models in judging what you see and it is good to formalise these where possible. With something like heights of fathers and sons you might expect some kind of positive association and judge how the plot looks with that image in mind. In other situations, perhaps when the same plot includes both males and females, you might expect to see signs of there being two groups. Prior expectations can be based on context and existing knowledge. Once you have seen a plot, the data themselves influence what features you study and how you judge them. Subjective impressions can supply valuable insights, but need to be confirmed by checking with other views of the data and with objective testing, where possible.
+
+
+
+
+
+5.5 Comparing groups within scatterplots
+
+
+The Olympic athletes' dataset shown in Figure 5.1 suffered from overplotting, which is one good reason for adjusting the scatterplot when displaying the data. Either overlaid density estimates or alpha-blending might be used, but given the structure of the data, where we can expect height and weight to differ by the sex of the athletes and their sport, a better approach would be to split up the data by possible explanatory variables. For instance, the following code plots a scatterplot for the females above one for the males:
+
+
+
+```{r}
+ggplot(oly12, aes(Height, Weight)) +
+  geom_point(size = 1) + 
+  facet_wrap(~ Sex, ncol=1)
+```
+
+
+
+```{r}
+
+oly12JWW <- filter(oly12, Sport %in%
+   c("Judo", "Weightlifting", "Wrestling")) 
+ggplot(oly12JWW, aes(Height, Weight)) + 
+  geom_point(size = 1) + facet_wrap(~Sport) + 
+  ggtitle("Weight and Height by Sport")
+```
+
+```{rWhenever you split up a dataset in this way it is important to have all the plots the same size with the same scales for comparative purposes. This is handled automatically with facetting in ggplot2 or within lattice. However, it is also useful to organise the plots, so that the comparisons of most interest are easiest to make. Sometimes having certain plots in the same row is best, sometimes having them in the same column. And often it will make sense to pick out particular subsets and make a plot just with them. If you want to compare the height and weight scatterplots for judo, weightlifting, and wrestling, then create the subset first and plot accordingly, e.g.}
+oly12S <- within(oly12, Sport <- abbreviate(Sport, 12)) 
+ggplot(oly12S, aes(Height, Weight)) +
+  geom_point(size = 1) + facet_wrap(~Sport) + 
+  ggtitle("Weight and Height by Sport")
+```
+
+
+Whenever you split up a dataset in this way it is important to have all the plots the same size with the same scales for comparative purposes. This is handled automatically with facetting in ggplot2 or within lattice. However, it is also useful to organise the plots, so that the comparisons of most interest are easiest to make. Sometimes having certain plots in the same row is best, sometimes having them in the same column. And often it will make sense to pick out particular subsets and make a plot just with them. If you want to compare the height and weight scatterplots for judo, weightlifting, and wrestling, then create the subset first and plot accordingly, e.g.
+
+5.6 Scatterplot matrices for looking at many pairs of variables
+
+Scatterplot matrices (sploms) are tables of scatterplots with each variable plotted against all of the others. They give excellent initial overviews of the relationships between continuous variables in datasets with small numbers of variables.
+
+There are many different ways of drawing sploms. You can have different options of what is plotted on the diagonal or of what is plotted above or below the diagonal. Since the plots above are just flipped versions of the ones below, some analysts prefer to provide statistical information or other displays in the other half of a splom. You can restrict sploms to continuous variables or provide additional types of plot for including categorical variables. If you plot histograms or density estimates down the diagonal, then the scatterplot matrix gives you an overview of the one-dimensional distributions as well.
+
+## Crime in the U.S.
+The dataset crime.us from the VGAMdata package includes the absolute crime figures and the crime rates by population for the fifty U.S. states in 2009. Figure 5.12 shows a splom of the rates for seven kinds of crime (the dataset also includes rates for the four crimes of violence together and the three property crimes together). It also shows density estimates for the variables down the diagonal. Whatever preconceived notions we might have of how the rates might be related to one another, the splom provides a first, quick summary of the associations between the variables, both through the graphics and through the correlation coefficients.
+
+```{r}
+library(GGally)
+```
+
+```{r}
+data(crime.us, package="VGAMdata")
+crime.usR <- crime.us
+names(crime.usR) <- gsub("*Rate", "", names(crime.usR)) 
+names(crime.usR)[19:20] <- c("Larceny", "MotorVTheft") 
+
+ggpairs(crime.usR[, c(13:16, 18:20)],
+        title = "Crime rates in the USA", 
+        diag = list(continuous="density", 
+                    axisLabels="none"))
+
+```
+
+
+Swiss banknotes
+The dataset bank from the gclus package includes six measurements on each of 100 genuine Swiss banknotes and 100 forged notes. The dataset was used extensively in a fine multivariate statistics textbook [Flury and Riedwyl, 1988].
+
+
+```{r}
+library(car)
+data(bank, package="gclus")
+par(mar=c(1.1, 1.1, 1.1, 1.1))
+spm(select(bank, Length:Diagonal), pch=c(16, 16),
+ dagonal="histogram", smoother=FALSE,
+ reg.line=FALSE, groups=bank$Status)
+```
+A splom of the variables is shown in Figure 5.13. Left and Right are strongly positively correlated. There is evidence of negative association amongst the last three variables (Bottom, Top, and Diagonal) and there are also suggestions that the genuine and counterfeit notes can be distinguished using those variables. The scatterplot for Bottom and Top is particularly interesting, as the overall association is slightly positive, while the two possible subgroups each have a negative association between the two variables. The default display for the spm function from car includes smoothers with confidence bands, linear regression lines in the scatterplots, and density estimates on the diagonal. It also uses open circles for the points. All this makes for a fairly cluttered display, so other options have been chosen here.
+
+
+A scatterplot matrix of the Swiss banknotes dataset with the forged notes coloured in red. In some of the scatterplots the groups of notes are well separated.Some variables are associated, some not. There are a few possible outliers, not all of them forgeries.
+
+TRICKS
+
+
+
+cpairs with panels coloured by level of correlation
+
+```{r}
+
+library(gclus)
+judge.cor <- cor(USJudgeRatings)
+judge.color <- dmat.color(judge.cor)
+cpairs(USJudgeRatings, 
+       panel.colors=judge.color,
+       pch=".", gap=.5)
+```
+gpairs with loess smooths
+
+```{r}
+library(gpairs.mod with standard scatterplots as well as scatterplots of partial residuals
+library(SMPracticals) 
+data(mathmarks)
+pairs.mod(mathmarks)pairs) 
+data(Leaves)
+gpairs(Leaves[1:10], lower.pars=list(scatter='loess’))
+```
+
+pairs.mod with standard scatterplots as well as scatterplots of partial residuals
+
+```{r}
+library(SMPracticals) 
+data(mathmarks)
+pairs.mod(mathmarks)
+```
+
+
+
+5.7 Scatterplot options
+Point size
+Very small points can hardly be seen and very large points overlap each other and make the plot look like a collection of clumps. Making points a little larger can be useful for emphasising outliers; making points a little smaller can be useful for distinguishing groups of points. Occasionally, particular point sizes can lead to undesirable visual effects, especially if the data are gridded with parallel strips of points close together.
+
+Point size can also be used to represent the value of a continuous non-negative variable. When the basic symbol is a circle, then this gives a bubble chart. It can be quite useful for smallish datasets without too much overlapping and is used in Gapminder's displays of global development data [Rosling, 2013].
+
+Symbols for points
+
+The current default in R for scatterplots is to use open circles. As attentive readers will have gathered, I prefer small filled circles. You should use what you think conveys information best for you.
+
+When a dataset is small and made up of different groups, it is helpful to be able to tell the groups apart in a scatterplot. An old solution is to draw the members of each group with a different symbol. This can work if the points do not overlap and if the symbols are easy to identify. Mostly it does not, and colour is more effective anyway. With large datasets, using different symbols looks cluttered and messy, so a set of scatterplots, one for each group, as in a trellis display, works better.
+
+Alpha-blending
+
+A partial solution to overplotting problems is to use alpha-blending. Each point is given a weight between 0 and 1 and where several points overlap, the resulting area is drawn correspondingly darker (in fact more opaque). For instance, if α = 0.1, then any area with ten or more points has the maximum darkness. The effect is to emphasise areas of higher density and downplay areas of lesser density, so that outliers cannot be seen so easily. Using no alpha-blending (equivalent to α = 1) can leave the bulk of the data for a large dataset looking like a solid indistinguishable mass. Alpha-blending works better interactively, when you can explore a range of alpha values quickly to see what information is shown at different levels.
+
+Colouring points
+
+Colour is often used to distinguish points by groups. If the data are fairly well separated (whatever that means in practice), this is helpful. You always have to bear in mind that when there are points on top of one another, the visible colour is the colour of the last point drawn. So if there are three colours, red, green, and blue, the plot may look different if drawn in that order (maybe lots of blue), than if drawn in the reverse order (maybe lots of red).
+
+If you think an interesting structure is evident in a coloured scatterplot, then it is worthwhile drawing a trellis plot of scatterplots by group. Although coloured scatterplots may have disadvantages, it is often easier to identify a possible group structure there than in a trellis plot and it is always good to check.
+
+When colour is used to highlight particular points, it is usually drawn last and hence on top. The same cautionary advice applies here as for colouring by groups.
+
+Splom options
+
+The many options available for sploms were referred to in §5.6. You can display statistics instead of half of the scatterplots, add models to scatterplots, or show marginal information on the diagonal.
+
+
+
+
+
+
+
+

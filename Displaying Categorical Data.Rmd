@@ -1,0 +1,132 @@
+---
+title: "Displaying Categorical Data"
+output: html_document
+---
+
+# 4.2 What features might categorical variables have?
+
+*Unexpected patterns of results* 
+
+There may be many more of some categories than others. Some categories may be missing completely.
+
+*Uneven distributions*
+
+Observational studies may exhibit some form of bias, perhaps too many males. In medical meta analyses many trials are analysed together, although it can turn out that most of the trials were small and that the results are dominated by the one or two major trials.
+
+*Extra categories*
+Gender may be recorded as ‘M’ and ‘F’, but also as ‘m’ and ‘f’, ‘male’ and ‘female’. In a study of patients with two medical conditions, there may be some patients diagnosed with a third condition.
+
+*Unbalanced experiments*
+Although experiments are usually carefully designed and carried out, there is always the chance that some data are missing or unusable. It is important to know if this occurs and leads to unequal group sizes.
+
+*Large numbers of categories*
+In studies including open-ended questions (e.g., “Who is your favorite politician?”) there may be far more names mentioned than you expected.
+
+*Don’t knows, refusals, errors, missings, ...*
+Data may not be available for a wide variety of reasons, and plots summarising how many cases of each type have arisen can be helpful both in deciding how to handle the data and in properly qualifying the results from the data that are available. Opinion polls are an obvious example.
+
+
+# 4.3 Nominal data—no fixed category order
+
+Meta analyses—how big was each study?
+
+```{r}
+library(meta)
+```
+
+```{r}
+Fleiss93
+```
+
+```{r}
+data(Fleiss93, package="meta")
+Fleiss93 <- within(Fleiss93, {total <- n.e + n.c
+    st <-reorder(study, -(total))})
+ggplot(Fleiss93, aes(st, total)) + geom_bar(stat="identity") +
+  xlab("") + ylab("") + ylim(0,20000)
+
+```
+A barchart of the sizes of the seven studies in the Fleiss93 meta analysis dataset. The ISIS-2 study had more patients than all the others put together.
+
+## Anorexia
+
+
+In the anorexia dataset in the MASS package, two treatment groups are compared with a control group. There are 72 cases and you might assume that they were split equally into three groups of 24 each. Figure 4.3 shows the curiously uneven distribution (29 and 17 for the two treatment groups and 26 for the control group). Needless to say, there were probably very good reasons for the split, but it could be useful to know. What if the groups were initially of the same size and there were dropouts?
+
+
+```{r}
+library(MASS)
+```
+
+
+```{r}
+str(anorexia)
+```
+
+```{r}
+ggplot(anorexia, aes(Treat)) + 
+  geom_bar() + 
+  xlab("Treatment")
+```
+
+A table would show this just as well in principle but a graphic is more convincing.
+
+```{r}
+with(anorexia, table(Treat))
+```
+
+## Who sailed on the Titanic?
+
+The tragic sinking of the Titanic has been discussed endlessly and there are many films, books, and webpages about the disaster. Despite all this attention the information on those who sailed on the ship is incomplete. A lot is known about some passengers and members of the crew, especially about the first-class passengers and the officers; less is known about some of the others on the ship.
+
+
+Although there is not full agreement on all details, the dataset Titanic is generally thought to be an accurate summary. It contains four pieces of information on 2201 people who were on board: Class (1st, 2nd, 3rd, or crew), Sex, Age (a binary variable, Child or Adult), and Survived (whether they survived or died). Interest centres on issues such as survival by Class and Sex (which will be discussed in §7.2), but it is sensible to have a look at the simple univariate barcharts first, as in Figure 4.4.
+
+```{r}
+Titanic1 <- data.frame(Titanic)
+```
+
+```{r}
+p <- ggplot(Titanic1, aes(weight=Freq)) +
+  ylab("") + 
+  ylim(0,2250)
+
+cs <- p + aes(Class) + geom_bar(fill="blue")
+sx <- p + aes(Sex) + geom_bar(fill="green")
+ag <- p + aes(Age) + geom_bar(fill="tan2")
+su <- p + aes(Survived) + geom_bar(fill="red")
+
+grid.arrange(cs, sx, ag, su, nrow=1, widths=c(3, 2, 2, 2))
+```
+
+Barcharts of the four variables in the Titanic dataset. That the majority of passengers and crew died and that there were far more men than women on board is well known, the numbers in the different classes less so.
+
+
+## Opinion polls
+
+```{r}
+Party <- c("Fine Gael", "La", "Fianna Fail", "Sinn Fein", "In", "Green", "Don’t know") 
+
+nos <- c(181, 51, 171, 119, 91, 4, 368)
+
+IrOP <- data.frame(Party, nos)
+
+IrOP <<- within(IrOP, {
+   percwith <<- nos/sum(nos)
+   percnot <- nos/sum(nos[-7])}) 
+
+par(mfrow=c(2,1), mar = c(2.1, 2.1, 2.1, 2.1))
+
+with(IrOP, pie(percwith, labels=Party, clockwise=TRUE,
+               col=c("blue", "red", "darkgreen", "black","grey", "lightgreen", "white"), radius = 1))
+
+with(IrOP, pie(percnot[-7], labels=Party, clockwise=TRUE,
+   col=c("blue", "red", "darkgreen", "black", "grey", "lightgreen"), radius = 1))
+```
+
+
+
+
+
+
+

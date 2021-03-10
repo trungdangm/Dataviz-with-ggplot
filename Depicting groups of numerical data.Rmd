@@ -1,0 +1,249 @@
+---
+title: "Depicting groups of numerical data- Boxplot, Violin plot, and Sinaplot plot"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+The EDA of gapminder data can be found at the following link
+
+https://trungmdang.wixsite.com/website/post/revisiting-the-gapminder-dataset-using-dplyr-and-ggplot2
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(gapminder)
+library(dplyr)
+```
+
+# 1. Basics
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot()
+```
+
+# 2. Controlling colors
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot(color = "orange",
+               fill = "orange",
+               alpha = 0.2,              
+               notchwidth = 0.8,
+               outlier.colour=  "blue",
+               outlier.fill= "blue",
+               outlier.size = 3)
+```
+
+## Set a different color for each group
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot(aes(color = continent))+ # color = continent
+  scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07","blue")) # scale_color_manual
+```
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot(aes(fill = continent))+ # fill = continent
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07","blue")) # scale_fill_manual
+```
+
+
+## Highlighting a group of interest
+
+```{r}
+mpg %>% mutate(type = ifelse(class=="subcompact","Highlighted","Normal")) %>% 
+  ggplot(aes(x = class, 
+             y = hwy, 
+             fill = type)) + 
+  geom_boxplot() +
+  scale_fill_manual(values=c("blue", "grey")) +
+  theme(axis.title.x= element_blank(),
+        legend.position = "none")
+```
+
+# 3. Notched box plots 
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot(color = "orange",
+               fill = "orange",
+               alpha = 0.2, 
+               notch = TRUE,
+               notchwidth = 0.8,
+               outlier.colour=  "blue",
+               outlier.fill= "blue",
+               outlier.size = 3)
+```
+
+## Notched box plot with mean points
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+ggplot(aes(x = continent, 
+                y = lifeExp)) +
+  geom_boxplot(color = "orange",
+               fill = "orange",
+               alpha = 0.2, #
+               notch = TRUE,
+               notchwidth = 0.8,
+               outlier.colour=  "blue",
+               outlier.fill= "blue",  
+               outlier.size = 5) +
+  stat_summary(fun = mean,
+               geom = "point",
+               shape = 18,
+               size = 5,
+               color = "blue")
+```
+
+# 4. Violin plots
+
+```{r}
+library(Hmisc)
+```
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_violin(trim = FALSE, 
+              aes(color = continent)) +
+  stat_summary(fun.data = "mean_sdl",  
+               fun.args = list(mult = 1), 
+               geom = "pointrange", 
+               color = "black") +
+  scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07","blue"))
+```
+
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_violin(aes(fill = continent), trim = FALSE) + 
+  geom_boxplot(width = 0.15)+
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07","blue")) +
+  theme(legend.position = "none")
+```
+
+# 5. Sinaplot
+
+```{r}
+library(ggforce)
+```
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_sina(aes(color = continent), size = 1)+
+  scale_color_manual(values = c("#00AFBB", "purple", "#FC4E07","blue")) +
+  theme(legend.position = "none")
+```
+
+# 6. Changing the order of display
+
+```{r}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp)) +
+  geom_boxplot(aes(fill = continent))+ 
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07","blue"))+
+  scale_x_discrete(limits=c("Africa", "Asia","Americas","Europe")) 
+```
+
+# 7. Grouped boxplot
+
+```{r}
+gapminder %>% 
+  filter(year %in% c(1957,1987,2007) & continent != "Oceania") %>%
+  ggplot(aes(x = continent, 
+             y = lifeExp, 
+             fill = factor(year))) + # the variable year is int, this variable must be converted into factor.
+  geom_boxplot() +
+  theme(axis.title.x= element_blank(),
+        legend.position = "none")
+```
+
+## Using facet in ggplot
+
+```{r, fig.height= 8.0, fig.width=10}
+gapminder %>% 
+  filter(continent != "Oceania") %>% 
+  ggplot(aes(x = continent, 
+             y = lifeExp, 
+             fill = continent)) +
+  geom_boxplot() +
+  facet_wrap(~year) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x= element_blank(),
+        legend.position = "none")
+```
+
+## Split the plot into multiple panel
+
+```{r, fig.height= 5, fig.width=10}
+gapminder %>% 
+  filter(year %in% c(1952,1962,1972,1982,1992,2002)) %>%
+  filter(continent != 'Oceania') %>%
+  ggplot(aes(x= factor(year),
+             y= lifeExp, 
+             fill = continent)) +
+  geom_boxplot() +
+  facet_wrap(~continent, ncol = 4) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x= element_blank(),
+        legend.position = "none")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
